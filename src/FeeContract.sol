@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.25;
 
-import "./Henries.sol";
 import "./interfaces/IERC20.sol";
+import "./Henries.sol";
+
 
 contract FeeContract {
     Henries public henries;//Henries Address
@@ -49,6 +50,7 @@ contract FeeContract {
         emit NewTopBid(msg.sender, _amount);
     }
 
+    //add try in case they're blacklisted.  it should roll over to next auction
     /**
      * @dev pays out the winner of the auction and starts a new one
      */
@@ -56,7 +58,7 @@ contract FeeContract {
         require(block.timestamp >= endDate, "auction must be over");
         if(currentTopBid > 0){
             georgies.transfer(topBidder,georgies.balanceOf(address(this)));
-            henries.burnHenries(address(this),currentTopBid);
+            henries.burn(address(this),currentTopBid);
         }
         emit AuctionClosed(topBidder, currentTopBid);
         endDate = block.timestamp + auctionFrequency; // just restart it...

@@ -1,7 +1,6 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.25;
 
-
 import "./Token.sol";
 
 /**
@@ -15,25 +14,45 @@ contract Henries is Token{
     address public feeContract;//address of feeContract
 
     //events
-    event HenriesMinted(address _to, uint256 _amount);
+    event AdminChanged(address _newAdmin);
+    event FeeContractChanged(address _newFeeContract);
     event HenriesBurned(address _from, uint256 _amount);
+    event HenriesMinted(address _to, uint256 _amount);
+
 
     //functions
     /**
      * @dev constructor to initialize contract and token
      */
-    constructor(address _admin, address _feeContract, uint256 _initialSupply, string memory _name, string memory _symbol) Token(_name,_symbol){
+    constructor(address _admin, uint256 _initialSupply, string memory _name, string memory _symbol) Token(_name,_symbol){
         admin = _admin;
-        feeContract = _feeContract;
         _mint(admin, _initialSupply);
     }
 
     /**
-     * @dev allows the admin contract to burn tokens of users
+     * @dev function to change the admin
+     * @param _newAdmin address of new admin
+     */
+    function changeAdmin(address _newAdmin) external{
+        require(msg.sender == admin);
+        require(_newAdmin != address(0));
+        admin = _newAdmin;
+        emit AdminChanged(_newAdmin);
+    }
+    
+    function changeFeeContract(address _newFeeContract) external{
+        require(msg.sender == admin);
+        require(_newFeeContract != address(0));
+        feeContract = _newFeeContract;
+        emit FeeContractChanged(_newFeeContract);
+    }
+
+    /**
+     * @dev allows the fee contract to burn tokens of users
      * @param _from address to burn tokens of
      * @param _amount amount of tokens to burn
      */
-    function burnHenries(address _from, uint256 _amount) external{
+    function burn(address _from, uint256 _amount) external{
         require(msg.sender == feeContract);
         _burn(_from, _amount);
         emit HenriesBurned(_from,_amount);
@@ -45,7 +64,7 @@ contract Henries is Token{
      * @param _amount amount of tokens to mint
      */
      //should we update this to be less manual?
-    function mintHenries(address[] memory _to, uint256[] memory _amount) external{
+    function mint(address[] calldata _to, uint256[] calldata _amount) external{
         require(msg.sender == admin);
         require(_to.length == _amount.length);
         uint256 _total;

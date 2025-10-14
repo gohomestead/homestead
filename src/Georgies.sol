@@ -1,43 +1,41 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.25;
+
 import "./Token.sol";
 
 contract Georgies is Token{
-    address public loanContract;
+    //storage
     address public admin;
+    address public loanContract;
     bool public paused;
     mapping(address => bool) public blacklisted;
 
-    event ContractPauseChanged(bool _paused);
-    event BlacklistStatusChanged(address _addy, bool _status);
+    //events
     event AdminChanged(address _newAdmin);
+    event BlacklistStatusChanged(address _addy, bool _status);
+    event ContractPauseChanged(bool _paused);
     event LoanContractChanged(address _newLoanContract);
 
+    //functions
     constructor(address _admin,string memory _name, string memory _symbol) Token(_name,_symbol){
         admin = _admin;
-
     }
+    
     //add delay on this
+    /**
+     * @dev function to change the admin
+     * @param _newAdmin address of new admin
+     */
+    function changeAdmin(address _newAdmin) external{
+        require(msg.sender == admin);
+        admin = _newAdmin;
+        emit AdminChanged(_newAdmin);
+    }
+    
     function changeLoanContract(address _newLoanContract) external{
         require(msg.sender == admin);
         loanContract = _newLoanContract;
         emit LoanContractChanged(_newLoanContract);
-    }
-
-    function mint(address _to,uint256 _amount) external{
-        require(msg.sender == loanContract);
-        _mint(_to,_amount);
-    }
-
-    function burn(address _from,uint256 _amount) external{
-        require(msg.sender == loanContract);
-        _burn(_from,_amount);
-    }
-
-    function init(address _loanContract) public{
-        require(msg.sender == admin);
-        require(loanContract == address(0));
-        loanContract = _loanContract;
     }
 
     function togglePause() external{
@@ -45,13 +43,7 @@ contract Georgies is Token{
         paused = !paused;
         emit ContractPauseChanged(paused);
     }
-
-    function changeAdmin(address _newAdmin) external{
-        require(msg.sender == admin);
-        admin = _newAdmin;
-        emit AdminChanged(_newAdmin);
-    }
-
+    
     function blacklistUpdate(address[] memory _addresses,bool[] memory _set) external{
         require(_addresses.length == _set.length);
         require(msg.sender == admin);
@@ -60,7 +52,23 @@ contract Georgies is Token{
             emit BlacklistStatusChanged(_addresses[_i], _set[_i]);
         }
     }
-    /**
+
+    function burn(address _from,uint256 _amount) external{
+        require(msg.sender == loanContract);
+        _burn(_from,_amount);
+    }
+    function mint(address _to,uint256 _amount) external{
+        require(msg.sender == loanContract);
+        _mint(_to,_amount);
+    }
+
+    /*Getters*/
+    function isBlacklisted(address _addy) external view returns(bool){
+        return blacklisted[_addy];
+    }
+
+    /*Internal*/
+    /** 
      * @dev moves tokens from one address to another
      * @param _src address of sender
      * @param _dst address of recipient

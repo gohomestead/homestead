@@ -1,8 +1,8 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.25;
 
-import "./interfaces/ILoanOriginator.sol";
 import "./interfaces/IERC20.sol";
+import "./interfaces/ILoanOriginator.sol";
 
 //it literally can't pay off all it's loans.  But that's ok.  
 //its role is to sell to the market so other people can pay off their loans
@@ -18,40 +18,50 @@ import "./interfaces/IERC20.sol";
 contract Treasury{
 
     //storage
-    address admin;
-    address wallet;
-    IERC20 georgies;
-    ILoanOriginator loanContract;
+    address public admin;
+    IERC20 public georgies;
+    uint256 public totalOut;
+    mapping(address => uint256) public fundsGivenByAddress;
 
-    event LoanTakenByTreasury(uint256 _amount);
-    event FundsGivenToSeller(address _to, uint256 _amount);
-    event LoanPaidBackByTreasury(uint256 _amount);
+    //events
+    event AdminChanged(address _newAdmin);
+    event FundsDistributed(address _to, uint256 _amount);
+
     //functions
     /**
      * @dev constructor to initialize contract and token
      */
-    constructor(address _admin, address _loanContract, address _georgies){
+    constructor(address _admin, address _georgies){
         admin = _admin;
-        loanContract = ILoanOriginator(_loanContract);
         georgies = IERC20(_georgies);
     }
 
-    function changeWallet(address _newWallet) external{
+    /**
+     * @dev function to change the admin
+     * @param _newAdmin address of new admin
+     */
+    function changeAdmin(address _newAdmin) external{
         require(msg.sender == admin);
-        wallet = _newWallet;
+        require(_newAdmin != address(0));
+        admin = _newAdmin;
+        emit AdminChanged(_newAdmin);
     }
 
-    function takeOutNewLoan(uint256 _amount) external{
+    /**
+     * @dev function to transfer tokens for treasury functions
+     * @param _to destination of tokens
+     * @param _amount of tokens
+     */
+    function doMonetaryPolicy(address _to, uint256 _amount) external{
         require(msg.sender == admin);
-        loanContract.withdrawLoan(address(this),_amount);
-        georgies.transfer(wallet,_amount);
-        emit LoanTakenByTreasury(_amount);
-    }  
+        georgies.transfer(_to,_amount);
+        fundsGivenByAddress[_to] = fundsGivenByAddress[_to] += _amount;
+        totalOut += _amount;
+        emit FundsDistributed(_to, _amount);
+    }
+    //have a way to payBackLoan? or just send it here? 
 
-    function payOffLoan(uint256 _amount) external{
-        require(msg.sender == wallet);
-        loanContract.payLoan(address(this),_amount);
-        emit LoanPaidBackByTreasury(_amount);
-
+    function getFundsByAddress(address _addy) external view returns(uint256){
+        return fundsGivenByAddress[_addy];
     }
 }
