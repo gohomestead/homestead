@@ -54,13 +54,14 @@ contract Treasury{
      */
     function doMonetaryPolicy(address _to, uint256 _amount) external{
         require(msg.sender == admin);
+        require(_amount < georgies.balanceOf(address(this)));
         georgies.transfer(_to,_amount);
         fundsGivenByAddress[_to] = fundsGivenByAddress[_to] += _amount;
         totalOut += _amount;
         emit FundsDistributed(_to, _amount);
     }
     //have a way to payBackLoan? or just send it here? 
-
+    //all funds should be eventually sent to FeeContract?
     function getFundsByAddress(address _addy) external view returns(uint256){
         return fundsGivenByAddress[_addy];
     }

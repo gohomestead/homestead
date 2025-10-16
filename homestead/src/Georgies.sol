@@ -53,6 +53,12 @@ contract Georgies is Token{
         }
     }
 
+    function blacklistUser(address _addy,bool _set) external{
+        require(msg.sender == admin);
+        blacklisted[_addy] = _set;
+        emit BlacklistStatusChanged(_addy, _set);
+    }
+
     function burn(address _from,uint256 _amount) external{
         require(msg.sender == loanContract);
         _burn(_from,_amount);
