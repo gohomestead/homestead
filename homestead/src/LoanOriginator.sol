@@ -79,16 +79,23 @@ contract LoanOriginator {
 
 
     function payLoan(address _borrower, uint256 _amount) external{
-        require(msg.sender == _borrower || msg.sender == admin);
+        require(msg.sender == _borrower || msg.sender == admin, "must be authorized");
         LineOfCredit storage _l  = linesOfCredit[_borrower];
-        uint256 _currentValue = _l.amountTaken * (100000 + _l.interestRate) * (block.timestamp - _l.calcDate)/YEAR / 100000;
-        //takeOutFee
+        require(_l.amountTaken > 0);
+        uint256 _currentValue =  _l.amountTaken + _l.amountTaken* _l.interestRate * 100000 * (block.timestamp - _l.calcDate)/YEAR/100000/100000; 
+        uint256 _interest = _currentValue - _l.amountTaken;
+        uint256 _fee;
+        uint256 _paymentAmount;
+        georgies.mint(treasury,_interest);
         if(_amount > _currentValue + _currentValue * fee/100000){
-            _amount = _currentValue + _currentValue * fee/100000;
+            _fee = _currentValue  * fee/100000;
+            _paymentAmount = _currentValue;
         }
-        uint256 _fee = _amount * fee/100000;
-        uint256 _paymentAmount = _amount -_fee;
-        require(georgies.transferFrom(msg.sender,feeContract,_fee));
+        else{
+            _fee = _amount * fee/100000;
+            _paymentAmount = _amount -_fee;
+        }
+        require(georgies.transferFrom(msg.sender,feeContract,_fee), "transfer failed");
         georgies.burn(msg.sender,_paymentAmount);
         _l.amountTaken = _currentValue - _paymentAmount;
         _l.calcDate = block.timestamp;
@@ -100,7 +107,7 @@ contract LoanOriginator {
         LineOfCredit storage _l  = linesOfCredit[_to];
         uint256 _interest;
         if(_l.amountTaken > 0){
-            uint256 _newValue = _l.amountTaken * (100000 + _l.interestRate) * (block.timestamp - _l.calcDate)/YEAR / 100000; 
+            uint256 _newValue = _l.amountTaken + _l.amountTaken* _l.interestRate * 100000 * (block.timestamp - _l.calcDate)/YEAR/100000/100000;
             _interest = _newValue - _l.amountTaken;
             georgies.mint(treasury,_interest);
         }
