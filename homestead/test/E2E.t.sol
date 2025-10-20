@@ -75,20 +75,58 @@ contract E2ETest is Test {
         assert(georgies.balanceOf(address(feeContract))>.075 ether);
         assert(georgies.balanceOf(address(feeContract))<.0753 ether);
     }
-    // //Blacklist a user who already has a loan out
-    // function test_BlacklistCurrentUser() public view{
-    //     assertEq(token.decimals(), 18);
-    //     assertEq(token.name(), "test");
-    //     assertEq(token.symbol(),"tst");
-    // }
+    //Blacklist a user who already has a loan out
+    function test_BlacklistCurrentUser() public{
+        address _a4 = vm.addr(4);
+        vm.prank(_a1);
+        loanO.setLineOfCredit(_a4,10 ether,2000);
+        vm.prank(_a1);
+        loanO.withdrawLoan(_a4,10 ether);
+        vm.prank(_a1);
+        georgies.blacklistUser(_a4,true);
+        vm.prank(_a4);
+        vm.expectRevert();
+        georgies.transfer(_a1,1 ether);
+    }
 
-    // //Mint new tokens to new holder
-    // function test_MintNewTokensToHolders() public view{
-    //     assertEq(token.decimals(), 18);
-    //     assertEq(token.name(), "test");
-    //     assertEq(token.symbol(),"tst");
-    // }
-
+    //Mint new tokens to new holder
+    function test_MintNewTokensToHolders() public{
+        address _a5 = vm.addr(5);
+        address _a4 = vm.addr(4);
+        address _a6 = vm.addr(6);
+        address _a7 = vm.addr(7);
+        address _a8 = vm.addr(8);
+        vm.prank(_a1);
+        loanO.setLineOfCredit(_a4,10 ether,2000);
+        vm.prank(_a1);
+        loanO.setLineOfCredit(_a5,10 ether,2000);
+        vm.prank(_a1);
+        loanO.setLineOfCredit(_a6,10 ether,2000);
+        vm.prank(_a1);
+        loanO.withdrawLoan(_a4,10 ether);
+        vm.prank(_a5);
+        loanO.withdrawLoan(_a5,10 ether);
+        vm.prank(_a6);
+        loanO.withdrawLoan(_a6,10 ether);
+        vm.prank(_a4);
+        georgies.transfer(_a7,10 ether);
+        vm.prank(_a5);
+        georgies.transfer(_a7,10 ether);
+        vm.prank(_a6);
+        georgies.transfer(_a8,10 ether);
+        address[] memory _t = new address[](2);
+        uint[] memory _b = new uint[](2);
+        _t[0] = _a7;
+        _t[1] =  _a8;
+        _b[0] = 10 ether;
+        _b[1] = 5 ether;
+        vm.prank(_a1);
+        henries.mint(_t,_b);
+        assertEq(henries.totalSupply(),115.15 ether);
+        assertEq(henries.balanceOf(_a7),10 ether);
+        assertEq(henries.balanceOf(_a1),100.15 ether);
+        assertEq(henries.balanceOf(_a8),5 ether);
+    }
     // //Realistic Scenario - 10 loans, 10 months of paymnets
     // function test_BlacklistCurrentUser() public view{
     //     assertEq(token.decimals(), 18);

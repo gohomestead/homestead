@@ -119,7 +119,6 @@ contract LoanOriginator {
         georgies.mint(_to,_amount);
         georgies.mint(feeContract,_fee);
     }   
-
     //getters
     function getCreditDetails(address _to) external view returns(
         uint256 amount,
