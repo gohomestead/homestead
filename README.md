@@ -1,28 +1,39 @@
-## Homestead Protocol
+<p align="center">
+    <img src= './public/homestead.png' height="275"/>
+</p>
 
 
-//Georgies 
-    - ERC20 token
-    - pausable, blacklistable, mintable by address (the loan contract)
-    - burnable as well
+<b>Homestead</b> is a crypto system to provide subsizided interest rates for mortgages. The system allows borrowers to mint tokens that represent lines of credit.  These tokens can then be sold by the borrower in order to purchase a home or pay off previous financing.  Over time, the borrower will repurchase the token from the market to pay off their loans, burning the token. 
+
+The protocol consists of two core components: subsidized credit tokens (Georgies) representing debt obligations and a fee tokens (Henries) that help to subsidize interest rates and provide a mechanism for price stability. This whitepaper outlines the protocol's mechanics, economic incentives, regulatory considerations, and risk factors.
 
 
-//loan contract
-    - sets line of credit amount and interest rate
-    - there is no default, that is up to the controller who can just go pay back the loan after selling the house or working with borrower
-    - configurable delay on mint
-    - take .25% fee on mint and burn (this goes to the admin contract)
-    - has "bonus mint rate" -- set by Controller
+## Setting up and testing
+
+It's a simple foundry repo.  
+
+```shell
+$ cd homestead
+```
+
+### Build
+
+```shell
+$ forge build
+```
+
+### Test
+
+```shell
+$ forge test
+```
 
 
-// admin contract
-    - burns the fees via weekly auction
-    - If price of Georgies is below some threshold, allows the admin to control three variables:
-        - mint rate of Henries
-        - fee structure (eventually buy backs will be zero)
-        - Lower bonus rate (if there is one)
-        - Interest rate on new loans
+## Contributors<a name="contributors"> </a>
+
+This repository is maintained by the  [themandalore](https://www.github.com/themandalore)
 
 
-//Henries
-    - takes snapshot at date and then pays out a reward of Henries (claimable)
+#### Copyright
+
+Homestead 2025
