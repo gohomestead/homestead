@@ -61,7 +61,7 @@ contract Treasury{
      */
     function doMonetaryPolicy(address _to, uint256 _amount) external{
         require(msg.sender == admin);
-        require(_amount < georgies.balanceOf(address(this)));
+        require(_amount <= georgies.balanceOf(address(this)));
         georgies.transfer(_to,_amount);
         fundsGivenByAddress[_to] = fundsGivenByAddress[_to] += _amount;
         totalOut += _amount;
@@ -69,9 +69,9 @@ contract Treasury{
     }
 
         /**
-     * @dev function to transfer tokens for treasury functions
-     * @param _to destination of tokens
-     * @param _amount of tokens
+     * @dev function to retrieve funds given to each address
+     * @param _addy address of interest
+     * @return uint256 of number of georgies
      */
     function getFundsByAddress(address _addy) external view returns(uint256){
         return fundsGivenByAddress[_addy];

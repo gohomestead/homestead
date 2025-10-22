@@ -79,7 +79,7 @@ contract FeeContract {
         emit AuctionClosed(topBidder, currentTopBid);
         endDate = block.timestamp + auctionFrequency;
         topBidder = msg.sender;
-        currentTopBid = georgies.balanceOf(address(this));
+        currentTopBid = henries.balanceOf(address(this));
         emit NewAuctionStarted(endDate);
         emit NewTopBid(msg.sender, georgies.balanceOf(address(this)));
     }

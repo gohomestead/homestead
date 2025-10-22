@@ -129,14 +129,82 @@ contract E2ETest is Test {
         assertEq(henries.balanceOf(_a8),5 ether);
     }
     // //Realistic Scenario - 10 loans, 10 months of paymnets
-    // function test_BlacklistCurrentUser() public view{
-    //     assertEq(token.decimals(), 18);
-    //     assertEq(token.name(), "test");
-    //     assertEq(token.symbol(),"tst");
-    // }
+    function test_RealisticScenario() public{
+        address[] memory _addys = new address[](10);
+        address _bank = vm.addr(15);
+        uint256 loanA = uint256(4000000000000000000000) / 399;//10 eth + mint fee
+        for(uint i=0;i<10;i++){
+            _addys[i] = vm.addr(i + 3);
+            vm.prank(_a1);
+            loanO.setLineOfCredit(_addys[i],loanA,2000);
+            vm.prank(_addys[i]);
+            loanO.withdrawLoan(_addys[i],loanA);
+            vm.prank(_addys[i]);
+            georgies.transfer(_bank,10 ether);
+        }
+        assertEq(georgies.totalSupply(),loanA * 10);
+        //do auction
+        vm.prank(_a1);
+        henries.approve(address(feeContract),1 ether);
+        vm.prank(_a1);
+        feeContract.bid(1 ether);
+        vm.warp(feeContract.endDate() + 1);
+                vm.prank(_a1);
+        feeContract.startNewAuction();
+        assertEq(georgies.balanceOf(address(feeContract)),0);
+        uint _bal;
+        uint _tbal;
+        for(uint j=0;j<10;j++){
+            vm.warp(block.timestamp + MONTH);
+                for(uint i=0;i<9;i++){
+                    _bal= georgies.balanceOf(address(treasury));
+                    _tbal += _bal;
+                    if(_bal > 0){
+                        vm.prank(_a1);
+                        treasury.doMonetaryPolicy(_bank, _bal);
+                    }
+                    if(j == 9){
+                        (,uint256 _taken,,) = loanO.getCreditDetails(_addys[i]);
+                        vm.prank(_bank);
+                        georgies.transfer(_addys[i],_taken + .1 ether);
+                        vm.prank(_addys[i]);
+                        georgies.approve(address(loanO),_taken + .1 ether);
+                        vm.prank(_addys[i]);
+                        loanO.payLoan(_addys[i],_taken + .1 ether);
+                    }else{
+                        vm.prank(_bank);
+                        georgies.transfer(_addys[i],1 ether);
+                        vm.prank(_addys[i]);
+                        georgies.approve(address(loanO),1 ether);
+                        vm.prank(_addys[i]);
+                        loanO.payLoan(_addys[i],1 ether);
+                    }
+
+                }
+        }
+        for(uint i=0;i<9;i++){
+            (uint256 amount,
+            uint256 amountTaken,
+            uint256 calcDate,) = loanO.getCreditDetails(_addys[i]);
+            assertEq(amount,loanA);
+            assertEq(amountTaken,0);
+            assertEq(calcDate,block.timestamp);
+            assert(georgies.balanceOf(_addys[i]) < .1 ether);
+        }
+        assert(_tbal + georgies.balanceOf(address(treasury)) > .5 ether);//rough interest rate guess
+        assert(_tbal + georgies.balanceOf(address(treasury)) < 1 ether);
+        assert(georgies.balanceOf(address(feeContract))>.0025 * 10 ether * 9);
+        assert(georgies.balanceOf(address(feeContract))<.0025 * 10 ether * 10);
+        assertEq(henries.balanceOf(_a1),99 ether);
+        assertEq(henries.totalSupply(),99 ether);
+        assertEq(feeContract.currentTopBid(),0);
+        assertEq(feeContract.topBidder(), _a1);
+        (,uint256 _taken,,) = loanO.getCreditDetails(_addys[9]);
+        assertEq(georgies.totalSupply(), _taken);
+    }
     //Test arb - instant issue and payback
     function test_InstantIssueAndPayback() public{
-                vm.prank(_a1);
+        vm.prank(_a1);
         loanO.setLineOfCredit(_a1,20 ether,2000);
         vm.prank(_a1);
          uint256 loanA = uint256(4000000000000000000000) / 399;
@@ -166,10 +234,61 @@ contract E2ETest is Test {
         assert(georgies.balanceOf(address(feeContract))<.0751 ether);
     }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
     // //Change Fee part way through new loans
-    // function test_ChangingFee() public view{
-    //     assertEq(token.decimals(), 18);
-    //     assertEq(token.name(), "test");
-    //     assertEq(token.symbol(),"tst");
+    // function test_ChangingFee() public{
+    //     address[] memory _addys = new address[](10);
+    //     address _bank = vm.addr(15);
+    //     uint256 loanA = uint256(4000000000000000000000) / 399;//10 eth + mint fee
+    //     for(uint i=0;i<5;i++){
+    //         _addys[i] = vm.addr(i + 3);
+    //         vm.prank(_a1);
+    //         loanO.setLineOfCredit(_addys[i],loanA,2000);
+    //         vm.prank(_addys[i]);
+    //         loanO.withdrawLoan(_addys[i],loanA);
+    //         vm.prank(_addys[i]);
+    //         georgies.transfer(_bank,10 ether);
+    //     }
+    //     assertEq(georgies.totalSupply(), loanA * 5);
+    //     for(uint j=0;j<5;j++){
+    //         vm.warp(block.timestamp + MONTH);
+    //             for(uint i=0;i<10;i++){
+    //                 vm.prank(_addys[i]);
+    //                 georgies.approve(address(loanO),1 ether);
+    //                 vm.prank(_addys[i]);
+    //                 loanO.payLoan(_addys[i],1 ether);
+    //             }
+    //     }
+    //     //changeFee
+    //     vm.prank(_a1);
+    //     loanO.setFee(1000);
+    //     assertEq(loanO.fee(),1000);
+    //     for(uint j=5;j<10;j++){
+    //         vm.warp(block.timestamp + MONTH);
+    //             for(uint i=0;i<10;i++){
+    //                 vm.prank(_addys[i]);
+    //                 georgies.approve(address(loanO),1 ether);
+    //                 vm.prank(_addys[i]);
+    //                 loanO.payLoan(_addys[i],1 ether);
+    //             }
+    //     }
+    //     for(uint i=0;i<10;i++){
+    //                 vm.prank(_addys[i]);
+    //                 georgies.approve(address(loanO),1 ether);
+    //                 vm.prank(_addys[i]);
+    //                 loanO.payLoan(_addys[i],1 ether);
+    //     }
+    //     for(uint i=0;i<10;i++){
+    //         (uint256 amount,
+    //         uint256 amountTaken,
+    //         uint256 calcDate,) = loanO.getCreditDetails(_addys[i]);
+    //         assertEq(amount,loanA);
+    //         assertEq(amountTaken,0);
+    //         assertEq(calcDate,block.timestamp);
+    //         assert(georgies.balanceOf(_addys[i]) > 0.8 ether);
+    //         assert(georgies.balanceOf(_addys[i]) < 1 ether);
+    //     }
+    //     assert(georgies.balanceOf(address(treasury))>.05 ether);
+    //     assert(georgies.balanceOf(address(feeContract))>.075 ether);
+    //     assert(georgies.balanceOf(address(feeContract))<.0753 ether);
     // }
     // //Have a default - admin pays back loan
     function test_DefaultOnLoan() public{
@@ -177,7 +296,7 @@ contract E2ETest is Test {
         address _a4 = vm.addr(4);
         address _a6 = vm.addr(6);
         address _a7 = vm.addr(7);
-        uint256 loanA = uint256(4000000000000000000000) / 399;
+        uint256 loanA = uint256(4000000000000000000000) / 399;//10 eth + mint fee
         vm.prank(_a1);
         loanO.setLineOfCredit(_a1,20 ether,2000);
         vm.prank(_a1);
@@ -229,5 +348,33 @@ contract E2ETest is Test {
         //fees = 
         assert(georgies.balanceOf(address(feeContract))> .107 ether);
         assert(georgies.balanceOf(address(feeContract))<.1079 ether);
+    }
+
+        function test_blacklistedAuctionWinner() public{
+        address _a4 = vm.addr(4);
+        vm.prank(_a1);
+        loanO.setLineOfCredit(_a1,20 ether,2000);
+        vm.prank(_a1);
+        loanO.withdrawLoan(_a1,10 ether);
+        vm.prank(_a1);
+        georgies.transfer(address(feeContract), 5 ether);
+        uint256 ibal = georgies.balanceOf(address(feeContract));
+        vm.prank(_a1);
+        henries.transfer(_a4,1 ether);
+        vm.prank(_a4);
+        henries.approve(address(feeContract),1 ether);
+        vm.prank(_a4);
+        feeContract.bid(1 ether);
+        vm.prank(_a1);
+        georgies.blacklistUser(_a4,true);
+        vm.warp(feeContract.endDate() + 1);
+        vm.prank(_a1);
+        feeContract.startNewAuction();
+        assertEq(feeContract.currentTopBid(),1 ether);
+        assertEq(feeContract.topBidder(), _a1);
+        assert(feeContract.endDate() >  block.timestamp);
+        assertEq(georgies.balanceOf(_a4),0);
+        assertEq(georgies.balanceOf(address(feeContract)),ibal);
+        assertEq(henries.balanceOf(address(feeContract)),1 ether);
     }
 }
