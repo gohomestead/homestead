@@ -1,9 +1,18 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.25;
 
+//  ,--.--------.   _,.---._    ,--.-.,-.      ,----.  .-._         
+// /==/,  -   , -\,-.' , -  `. /==/- |\  \  ,-.--` , \/==/ \  .-._  
+// \==\.-.  - ,-./==/_,  ,  - \|==|_ `/_ / |==|-  _.-`|==|, \/ /, / 
+//  `--`\==\- \ |==|   .=.     |==| ,   /  |==|   `.-.|==|-  \|  |  
+//       \==\_ \|==|_ : ;=:  - |==|-  .|  /==/_ ,    /|==| ,  | -|  
+//       |==|- ||==| , '='     |==| _ , \ |==|    .-' |==| -   _ |  
+//       |==|, | \==\ -    ,_ //==/  '\  ||==|_  ,`-._|==|  /\ , |  
+//       /==/ -/  '.='. -   .' \==\ /\=\.'/==/ ,     //==/, | |- |  
+//       `--`--`    `--`--''    `--`      `--`-----`` `--`./  `--`  
 /**
  @title Token
- @dev base ERC20 w/Controller
+ @dev base ERC20 token
  */
 contract Token{
 
@@ -66,7 +75,7 @@ contract Token{
         return true;
     }
 
-    //Getters
+    //getters
     /**
      * @dev retrieves standard token allowance
      * @param _src user who owns tokens

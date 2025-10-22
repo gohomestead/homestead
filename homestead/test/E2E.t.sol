@@ -96,18 +96,19 @@ contract E2ETest is Test {
         address _a6 = vm.addr(6);
         address _a7 = vm.addr(7);
         address _a8 = vm.addr(8);
+                 uint256 loanA = uint256(4000000000000000000000) / 399;
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a4,10 ether,2000);
+        loanO.setLineOfCredit(_a4,loanA,2000);
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a5,10 ether,2000);
+        loanO.setLineOfCredit(_a5,loanA,2000);
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a6,10 ether,2000);
+        loanO.setLineOfCredit(_a6,loanA,2000);
         vm.prank(_a1);
-        loanO.withdrawLoan(_a4,10 ether);
+        loanO.withdrawLoan(_a4,loanA);
         vm.prank(_a5);
-        loanO.withdrawLoan(_a5,10 ether);
+        loanO.withdrawLoan(_a5,loanA);
         vm.prank(_a6);
-        loanO.withdrawLoan(_a6,10 ether);
+        loanO.withdrawLoan(_a6,loanA);
         vm.prank(_a4);
         georgies.transfer(_a7,10 ether);
         vm.prank(_a5);
@@ -133,12 +134,37 @@ contract E2ETest is Test {
     //     assertEq(token.name(), "test");
     //     assertEq(token.symbol(),"tst");
     // }
-    // //Test arb - instant issue and payback
-    // function test_InstantIssueAndPayback() public view{
-    //     assertEq(token.decimals(), 18);
-    //     assertEq(token.name(), "test");
-    //     assertEq(token.symbol(),"tst");
-    // }
+    //Test arb - instant issue and payback
+    function test_InstantIssueAndPayback() public{
+                vm.prank(_a1);
+        loanO.setLineOfCredit(_a1,20 ether,2000);
+        vm.prank(_a1);
+         uint256 loanA = uint256(4000000000000000000000) / 399;
+        loanO.withdrawLoan(_a1,loanA);
+        address _a4 = vm.addr(4);
+        vm.prank(_a1);
+        georgies.transfer(_a4, 1 ether);
+        vm.prank(_a1);
+        loanO.setLineOfCredit(_a4,10 ether,2000);
+        vm.prank(_a1);
+        loanO.withdrawLoan(_a4,10 ether);
+        vm.prank(_a4);
+        georgies.approve(address(loanO),10 ether);
+        vm.prank(_a4);
+        loanO.payLoan(_a4,10 ether);
+        (uint256 amount,
+        uint256 amountTaken,
+        uint256 calcDate,) = loanO.getCreditDetails(_a4);
+        assertEq(amount,10 ether);
+        uint256 _currentValue = 10 ether;
+        uint256 _fee = 10 ether * 250/100000;
+        uint256 _paymentAmount = 10 ether -_fee;
+        assertEq(amountTaken, _currentValue - _paymentAmount);
+        assertEq(calcDate,block.timestamp);
+        assertEq(georgies.balanceOf(_a4),1 ether - _fee);
+        assert(georgies.balanceOf(address(feeContract))>.0075 ether);
+        assert(georgies.balanceOf(address(feeContract))<.0751 ether);
+    }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
     // //Change Fee part way through new loans
     // function test_ChangingFee() public view{
     //     assertEq(token.decimals(), 18);
@@ -146,10 +172,62 @@ contract E2ETest is Test {
     //     assertEq(token.symbol(),"tst");
     // }
     // //Have a default - admin pays back loan
-    // function test_DefaultOnLoan() public view{
-    //     assertEq(token.decimals(), 18);
-    //     assertEq(token.name(), "test");
-    //     assertEq(token.symbol(),"tst");
-    // }
-
+    function test_DefaultOnLoan() public{
+        address _a5 = vm.addr(5);
+        address _a4 = vm.addr(4);
+        address _a6 = vm.addr(6);
+        address _a7 = vm.addr(7);
+        uint256 loanA = uint256(4000000000000000000000) / 399;
+        vm.prank(_a1);
+        loanO.setLineOfCredit(_a1,20 ether,2000);
+        vm.prank(_a1);
+        loanO.setLineOfCredit(_a4,20 ether,2000);
+        vm.prank(_a1);
+        loanO.setLineOfCredit(_a5,20 ether,2000);
+        vm.prank(_a1);
+        loanO.withdrawLoan(_a1,loanA);
+        vm.prank(_a1);
+        loanO.withdrawLoan(_a4,loanA);
+        vm.prank(_a5);
+        loanO.withdrawLoan(_a5,loanA);
+        vm.prank(_a4);
+        georgies.transfer(_a6,10 ether);
+        vm.prank(_a5);
+        georgies.transfer(_a7,10 ether);
+        uint totalFees = .0025 * 30 ether;
+        for(uint i=0;i<3;i++){
+            vm.warp(block.timestamp + MONTH);
+            vm.prank(_a6);
+            georgies.transfer(_a4,1 ether);
+            vm.prank(_a7);
+            georgies.transfer(_a5,1 ether);
+            vm.prank(_a4);
+            georgies.approve(address(loanO),1 ether);
+            vm.prank(_a4);
+            loanO.payLoan(_a4,1 ether);
+            totalFees += .0025 * 1 ether;
+            vm.prank(_a5);
+            georgies.approve(address(loanO),1 ether);
+            vm.prank(_a5);
+            loanO.payLoan(_a5,1 ether);
+            totalFees += .0025 * 1 ether;
+        }
+        //default on a4 loan
+        vm.prank(_a1);
+        georgies.approve(address(loanO),7.1 ether);
+        totalFees += .0025 * 7.1 ether;
+        vm.prank(_a1);
+        loanO.payLoan(_a4,7.1 ether);
+        (uint256 amount,
+        uint256 amountTaken,
+        uint256 calcDate,) = loanO.getCreditDetails(_a4);
+        assertEq(amount,20 ether);
+        assertEq(amountTaken,0);
+        assertEq(calcDate,block.timestamp);
+        assert(georgies.balanceOf(_a4) == 0 ether);
+        assert(georgies.balanceOf(address(treasury))>.05 ether);
+        //fees = 
+        assert(georgies.balanceOf(address(feeContract))> .107 ether);
+        assert(georgies.balanceOf(address(feeContract))<.1079 ether);
+    }
 }

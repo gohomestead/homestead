@@ -4,13 +4,20 @@ pragma solidity 0.8.25;
 import "./interfaces/IERC20.sol";
 import "./interfaces/ILoanOriginator.sol";
 
-//it literally can't pay off all it's loans.  But that's ok.  
-//its role is to sell to the market so other people can pay off their loans
+// ░▒▓████████▓▒░▒▓███████▓▒░░▒▓████████▓▒░░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░░▒▓███████▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░░▒▓█▓▒░░▒▓█▓▒░ 
+//    ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ 
+//    ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░ 
+//    ░▒▓█▓▒░   ░▒▓███████▓▒░░▒▓██████▓▒░ ░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░▒▓███████▓▒░ ░▒▓██████▓▒░  
+//    ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▒░     
+//    ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░      ░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░      ░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▒░     
+//    ░▒▓█▓▒░   ░▒▓█▓▒░░▒▓█▓▒░▒▓████████▓▒░▒▓█▓▒░░▒▓█▓▒░░▒▓██████▓▒░░▒▓███████▓▒░ ░▒▓██████▓▒░░▒▓█▓▒░░▒▓█▓▒░  ░▒▓█▓▒░     
+                                                                                                                       
+                                                                                                                       
+//the system literally can't pay off all loans.  If you mint 100 Georgies, but owe 102 next year, what's the deal? But that's ok.  
+//The treasury contract is the balance.  It collects this extra interest and uses it's preiveleged role 
+// as a stability mechanism in the system, with its main role is to sell to the market so other people can pay off their loans
 //if the price of Georgies is too high, we take out new loans and sell to the market
-//starts off with little ability to go in other direction, but can also help to 
-// stabilize georgies price if necessary (auto?)
-//should we have USDC mint ability?  
-// allows anyone to arb
+//starts off with little ability to go in other direction, but it can also help there
 /**
  @title
  @dev treasury contract for monetary policy
@@ -18,9 +25,9 @@ import "./interfaces/ILoanOriginator.sol";
 contract Treasury{
 
     //storage
-    address public admin;
+    address public admin;//admin can send funds from this contract
     IERC20 public georgies;
-    uint256 public totalOut;
+    uint256 public totalOut;//total amount given out from the contract
     mapping(address => uint256) public fundsGivenByAddress;
 
     //events
@@ -60,8 +67,12 @@ contract Treasury{
         totalOut += _amount;
         emit FundsDistributed(_to, _amount);
     }
-    //have a way to payBackLoan? or just send it here? 
-    //all funds should be eventually sent to FeeContract?
+
+        /**
+     * @dev function to transfer tokens for treasury functions
+     * @param _to destination of tokens
+     * @param _amount of tokens
+     */
     function getFundsByAddress(address _addy) external view returns(uint256){
         return fundsGivenByAddress[_addy];
     }

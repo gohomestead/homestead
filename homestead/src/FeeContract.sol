@@ -4,23 +4,36 @@ pragma solidity 0.8.25;
 import "./interfaces/IERC20.sol";
 import "./Henries.sol";
 
-
+//  _______  _______  _______   ______   ______   .__   __. .___________..______          ___       ______ .___________.
+// |   ____||   ____||   ____| /      | /  __  \  |  \ |  | |           ||   _  \        /   \     /      ||           |
+// |  |__   |  |__   |  |__   |  ,----'|  |  |  | |   \|  | `---|  |----`|  |_)  |      /  ^  \   |  ,----'`---|  |----`
+// |   __|  |   __|  |   __|  |  |     |  |  |  | |  . `  |     |  |     |      /      /  /_\  \  |  |         |  |     
+// |  |     |  |____ |  |____ |  `----.|  `--'  | |  |\   |     |  |     |  |\  \----./  _____  \ |  `----.    |  |     
+// |__|     |_______||_______| \______| \______/  |__| \__|     |__|     | _| `._____/__/     \__\ \______|    |__|     
+                                                                                                                     
+/**
+ @title FeeContract
+ @dev admin contract to handle fees paid from minting and burning of Georgies
+ // uses these fees to buy back and burn Henries using auctions of Georgies
+ */
 contract FeeContract {
+    //storage
     Henries public henries;//Henries Address
     IERC20 public georgies;//Georgies address
     uint256 public auctionFrequency;//auction frequency in seconds
 
     //bid variables
-    uint256 public currentTopBid;
+    uint256 public currentTopBid;//current top bid (in georgies)
     uint256 public endDate;//end date of current auction round
-    address public topBidder;
+    address public topBidder;//current top bidder in the round
 
     //events
     event AuctionClosed(address _winner, uint256 _amount);
+    event BidderBlacklisted(address _bidder);
     event NewAuctionStarted(uint256 _endDate);
     event NewTopBid(address _bidder, uint256 _amount);
 
-
+    //functions
     /**
      * @dev starts the CIT token and auction (minting) mechanism
      * @param _henries token to be used 
@@ -50,21 +63,24 @@ contract FeeContract {
         emit NewTopBid(msg.sender, _amount);
     }
 
-    //add try in case they're blacklisted.  it should roll over to next auction
     /**
      * @dev pays out the winner of the auction and starts a new one
      */
     function startNewAuction() external{
         require(block.timestamp >= endDate, "auction must be over");
         if(currentTopBid > 0){
-            georgies.transfer(topBidder,georgies.balanceOf(address(this)));
-            henries.burn(address(this),currentTopBid);
+            //if the top bidder is blacklisted, the call will fail.  it rolls over if this is the case
+            try georgies.transfer(topBidder,georgies.balanceOf(address(this))){
+                henries.burn(address(this),currentTopBid);
+            } catch {
+                emit BidderBlacklisted(topBidder);
+            }
         }
         emit AuctionClosed(topBidder, currentTopBid);
-        endDate = block.timestamp + auctionFrequency; // just restart it...
+        endDate = block.timestamp + auctionFrequency;
         topBidder = msg.sender;
-        currentTopBid = 0;
+        currentTopBid = georgies.balanceOf(address(this));
         emit NewAuctionStarted(endDate);
-        emit NewTopBid(msg.sender, 0);
+        emit NewTopBid(msg.sender, georgies.balanceOf(address(this)));
     }
 }

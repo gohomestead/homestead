@@ -87,12 +87,12 @@ contract LoanOriginatorTest is Test {
         uint256 amountTaken,
         uint256 calcDate,) = loanO.getCreditDetails(_a4);
         assertEq(amount,10 ether);
-        uint256 _currentValue = 10 ether * 102000 / 100000;
+        uint256 _currentValue = 10 ether * 102 / 100;
         uint256 _fee = 1 ether * 250/100000;
         uint256 _paymentAmount = 1 ether -_fee;
         assertEq(amountTaken, _currentValue - _paymentAmount);
         assertEq(calcDate,block.timestamp);
-        assertEq(georgies.balanceOf(_a4),9 ether);
+        assertEq(georgies.balanceOf(_a4),9 ether - 10 ether * .0025);
         assertEq(georgies.balanceOf(_a2),.0025 * 11 ether);
     }
 
@@ -107,10 +107,11 @@ contract LoanOriginatorTest is Test {
         (uint256 amount,
         uint256 amountTaken,
         uint256 calcDate,) = loanO.getCreditDetails(_a4);
+        uint256 fee = .0025 * 5 ether;
         assertEq(amount,10 ether);
         assertEq(amountTaken, 5 ether);
         assertEq(calcDate,block.timestamp);
-        assertEq(georgies.balanceOf(_a4),5 ether);
-        assertEq(georgies.balanceOf(_a2),.0025 * 5 ether);
+        assertEq(georgies.balanceOf(_a4),5 ether - fee);
+        assertEq(georgies.balanceOf(_a2),fee);
     }
 }

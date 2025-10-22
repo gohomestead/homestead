@@ -25,12 +25,19 @@ contract GeorgiesTest is Test {
     }
 
     function test_togglePause() public{
+        vm.prank(_a1);
+        georgies.changeLoanContract(_a2);
+        vm.prank(_a2);
+        georgies.mint(_a1, 3 ether);
         assertEq(georgies.paused(),false);
         vm.expectRevert();
         georgies.togglePause();
         vm.prank(_a1);
         georgies.togglePause();
         assertEq(georgies.paused(),true);
+        vm.expectRevert();
+        vm.prank(_a1);
+        georgies.transfer(_a2,1 ether);
 
     }
 
