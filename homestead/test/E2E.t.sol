@@ -179,7 +179,6 @@ contract E2ETest is Test {
                         vm.prank(_addys[i]);
                         loanO.payLoan(_addys[i],1 ether);
                     }
-
                 }
         }
         for(uint i=0;i<9;i++){
@@ -233,63 +232,92 @@ contract E2ETest is Test {
         assert(georgies.balanceOf(address(feeContract))>.0075 ether);
         assert(georgies.balanceOf(address(feeContract))<.0751 ether);
     }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
-    // //Change Fee part way through new loans
-    // function test_ChangingFee() public{
-    //     address[] memory _addys = new address[](10);
-    //     address _bank = vm.addr(15);
-    //     uint256 loanA = uint256(4000000000000000000000) / 399;//10 eth + mint fee
-    //     for(uint i=0;i<5;i++){
-    //         _addys[i] = vm.addr(i + 3);
-    //         vm.prank(_a1);
-    //         loanO.setLineOfCredit(_addys[i],loanA,2000);
-    //         vm.prank(_addys[i]);
-    //         loanO.withdrawLoan(_addys[i],loanA);
-    //         vm.prank(_addys[i]);
-    //         georgies.transfer(_bank,10 ether);
-    //     }
-    //     assertEq(georgies.totalSupply(), loanA * 5);
-    //     for(uint j=0;j<5;j++){
-    //         vm.warp(block.timestamp + MONTH);
-    //             for(uint i=0;i<10;i++){
-    //                 vm.prank(_addys[i]);
-    //                 georgies.approve(address(loanO),1 ether);
-    //                 vm.prank(_addys[i]);
-    //                 loanO.payLoan(_addys[i],1 ether);
-    //             }
-    //     }
-    //     //changeFee
-    //     vm.prank(_a1);
-    //     loanO.setFee(1000);
-    //     assertEq(loanO.fee(),1000);
-    //     for(uint j=5;j<10;j++){
-    //         vm.warp(block.timestamp + MONTH);
-    //             for(uint i=0;i<10;i++){
-    //                 vm.prank(_addys[i]);
-    //                 georgies.approve(address(loanO),1 ether);
-    //                 vm.prank(_addys[i]);
-    //                 loanO.payLoan(_addys[i],1 ether);
-    //             }
-    //     }
-    //     for(uint i=0;i<10;i++){
-    //                 vm.prank(_addys[i]);
-    //                 georgies.approve(address(loanO),1 ether);
-    //                 vm.prank(_addys[i]);
-    //                 loanO.payLoan(_addys[i],1 ether);
-    //     }
-    //     for(uint i=0;i<10;i++){
-    //         (uint256 amount,
-    //         uint256 amountTaken,
-    //         uint256 calcDate,) = loanO.getCreditDetails(_addys[i]);
-    //         assertEq(amount,loanA);
-    //         assertEq(amountTaken,0);
-    //         assertEq(calcDate,block.timestamp);
-    //         assert(georgies.balanceOf(_addys[i]) > 0.8 ether);
-    //         assert(georgies.balanceOf(_addys[i]) < 1 ether);
-    //     }
-    //     assert(georgies.balanceOf(address(treasury))>.05 ether);
-    //     assert(georgies.balanceOf(address(feeContract))>.075 ether);
-    //     assert(georgies.balanceOf(address(feeContract))<.0753 ether);
-    // }
+    //Change Fee part way through new loans
+    function test_ChangingFee() public{
+        address[] memory _addys = new address[](10);
+        address _bank = vm.addr(15);
+        uint256 loanA = uint256(4000000000000000000000) / 399;//10 eth + mint fee
+        for(uint i=0;i<10;i++){
+            _addys[i] = vm.addr(i + 3);
+            vm.prank(_a1);
+            loanO.setLineOfCredit(_addys[i],loanA,2000);
+            vm.prank(_addys[i]);
+            loanO.withdrawLoan(_addys[i],loanA);
+            vm.prank(_addys[i]);
+            georgies.transfer(_bank,10 ether);
+        }
+        uint256 _totalFees = georgies.balanceOf(address(feeContract));
+        assertEq(georgies.totalSupply(), loanA * 10);
+        uint _bal;
+        uint _tbal;
+        for(uint j=0;j<5;j++){
+            vm.warp(block.timestamp + MONTH);
+                for(uint i=0;i<10;i++){
+                    _bal= georgies.balanceOf(address(treasury));
+                    _tbal += _bal;
+                    if(_bal > 0){
+                        vm.prank(_a1);
+                        treasury.doMonetaryPolicy(_bank, _bal);
+                    }
+                    vm.prank(_bank);
+                    georgies.transfer(_addys[i],1 ether);
+                    vm.prank(_addys[i]);
+                    georgies.approve(address(loanO),1 ether);
+                    vm.prank(_addys[i]);
+                    loanO.payLoan(_addys[i],1 ether);
+                }
+        }
+        uint256 payFees = georgies.balanceOf(address(feeContract)) - _totalFees;
+        _totalFees = georgies.balanceOf(address(feeContract));
+        //changeFee
+        vm.prank(_a1);
+        loanO.setFee(1000);
+        assertEq(loanO.fee(),1000);
+        for(uint j=5;j<10;j++){
+            vm.warp(block.timestamp + MONTH);
+                for(uint i=0;i<9;i++){
+                    _bal= georgies.balanceOf(address(treasury));
+                    _tbal += _bal;
+                    if(_bal > 0){
+                        vm.prank(_a1);
+                        treasury.doMonetaryPolicy(_bank, _bal);
+                    }
+                    if(j == 9){
+                        (,uint256 _taken,,) = loanO.getCreditDetails(_addys[i]);
+                        vm.prank(_bank);
+                        georgies.transfer(_addys[i],_taken + .1 ether);
+                        vm.prank(_addys[i]);
+                        georgies.approve(address(loanO),_taken + .1 ether);
+                        vm.prank(_addys[i]);
+                        loanO.payLoan(_addys[i],_taken + .1 ether);
+                    }else{
+                        vm.prank(_bank);
+                        georgies.transfer(_addys[i],1 ether);
+                        vm.prank(_addys[i]);
+                        georgies.approve(address(loanO),1 ether);
+                        vm.prank(_addys[i]);
+                        loanO.payLoan(_addys[i],1 ether);
+                    }
+                }
+        }
+        uint256 payFees2 = georgies.balanceOf(address(feeContract)) - _totalFees;
+        for(uint i=0;i<9;i++){
+            (uint256 amount,
+            uint256 amountTaken,
+            uint256 calcDate,) = loanO.getCreditDetails(_addys[i]);
+            assertEq(amount,loanA);
+            assertEq(amountTaken,0);
+            assertEq(calcDate,block.timestamp);
+            assert(georgies.balanceOf(_addys[i]) < .1 ether);
+        }
+        uint256 _res =  5 * 9 * .01 ether + 5 * 10 * .0025 ether + 10 * 10.025 * .0025 ether;
+        _res = _res;
+        assert(georgies.balanceOf(address(feeContract)) - _res < .05 ether);
+        _res = 5 * 10 * .0025 ether;
+        assert(payFees == _res);
+        _res =  5* 9 * .01 ether + _tbal * 1000/100000;
+        assert(payFees2 - _res < .01 ether);
+    }
     // //Have a default - admin pays back loan
     function test_DefaultOnLoan() public{
         address _a5 = vm.addr(5);
