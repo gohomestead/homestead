@@ -47,9 +47,9 @@ contract E2ETest is Test {
         address _a5 = vm.addr(5);
         address _a4 = vm.addr(4);
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a4,10 ether,2000);
+        loanO.setLineOfCredit(_a4,10 ether,2000,false);
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a5,10 ether,2000);
+        loanO.setLineOfCredit(_a5,10 ether,2000,false);
         vm.prank(_a1);
         loanO.withdrawLoan(_a4,10 ether);
         vm.prank(_a5);
@@ -79,7 +79,7 @@ contract E2ETest is Test {
     function test_BlacklistCurrentUser() public{
         address _a4 = vm.addr(4);
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a4,10 ether,2000);
+        loanO.setLineOfCredit(_a4,10 ether,2000,false);
         vm.prank(_a1);
         loanO.withdrawLoan(_a4,10 ether);
         vm.prank(_a1);
@@ -98,11 +98,11 @@ contract E2ETest is Test {
         address _a8 = vm.addr(8);
                  uint256 loanA = uint256(4000000000000000000000) / 399;
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a4,loanA,2000);
+        loanO.setLineOfCredit(_a4,loanA,2000,false);
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a5,loanA,2000);
+        loanO.setLineOfCredit(_a5,loanA,2000,false);
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a6,loanA,2000);
+        loanO.setLineOfCredit(_a6,loanA,2000,false);
         vm.prank(_a1);
         loanO.withdrawLoan(_a4,loanA);
         vm.prank(_a5);
@@ -122,7 +122,7 @@ contract E2ETest is Test {
         _b[0] = 10 ether;
         _b[1] = 5 ether;
         vm.prank(_a1);
-        henries.mint(_t,_b);
+        henries.mint(_b);
         assertEq(henries.totalSupply(),115.15 ether);
         assertEq(henries.balanceOf(_a7),10 ether);
         assertEq(henries.balanceOf(_a1),100.15 ether);
@@ -136,7 +136,7 @@ contract E2ETest is Test {
         for(uint i=0;i<10;i++){
             _addys[i] = vm.addr(i + 3);
             vm.prank(_a1);
-            loanO.setLineOfCredit(_addys[i],loanA,2000);
+            loanO.setLineOfCredit(_addys[i],loanA,2000,false);
             vm.prank(_addys[i]);
             loanO.withdrawLoan(_addys[i],loanA);
             vm.prank(_addys[i]);
@@ -204,7 +204,7 @@ contract E2ETest is Test {
     //Test arb - instant issue and payback
     function test_InstantIssueAndPayback() public{
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a1,20 ether,2000);
+        loanO.setLineOfCredit(_a1,20 ether,2000,false);
         vm.prank(_a1);
          uint256 loanA = uint256(4000000000000000000000) / 399;
         loanO.withdrawLoan(_a1,loanA);
@@ -212,7 +212,7 @@ contract E2ETest is Test {
         vm.prank(_a1);
         georgies.transfer(_a4, 1 ether);
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a4,10 ether,2000);
+        loanO.setLineOfCredit(_a4,10 ether,2000,false);
         vm.prank(_a1);
         loanO.withdrawLoan(_a4,10 ether);
         vm.prank(_a4);
@@ -240,7 +240,7 @@ contract E2ETest is Test {
         for(uint i=0;i<10;i++){
             _addys[i] = vm.addr(i + 3);
             vm.prank(_a1);
-            loanO.setLineOfCredit(_addys[i],loanA,2000);
+            loanO.setLineOfCredit(_addys[i],loanA,2000,false);
             vm.prank(_addys[i]);
             loanO.withdrawLoan(_addys[i],loanA);
             vm.prank(_addys[i]);
@@ -326,11 +326,11 @@ contract E2ETest is Test {
         address _a7 = vm.addr(7);
         uint256 loanA = uint256(4000000000000000000000) / 399;//10 eth + mint fee
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a1,20 ether,2000);
+        loanO.setLineOfCredit(_a1,20 ether,2000,false);
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a4,20 ether,2000);
+        loanO.setLineOfCredit(_a4,20 ether,2000,false);
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a5,20 ether,2000);
+        loanO.setLineOfCredit(_a5,20 ether,2000,false);
         vm.prank(_a1);
         loanO.withdrawLoan(_a1,loanA);
         vm.prank(_a1);
@@ -381,7 +381,7 @@ contract E2ETest is Test {
         function test_blacklistedAuctionWinner() public{
         address _a4 = vm.addr(4);
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a1,20 ether,2000);
+        loanO.setLineOfCredit(_a1,20 ether,2000,false);
         vm.prank(_a1);
         loanO.withdrawLoan(_a1,10 ether);
         vm.prank(_a1);

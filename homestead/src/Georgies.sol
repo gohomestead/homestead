@@ -12,20 +12,21 @@ import "./Token.sol";
 // "`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-'"`-0-0-' 
 /**
  @title Georgies
- @dev base token of the system, represents a tokenized mortgage
+ @dev base token of the system, represents the currency used for homestead mortgages
  */
 contract Georgies is Token{
     //storage
     address public admin;//admin, controls pause, blacklist functionality, and loanContract address
     address public loanContract;//loan contract that can mint/burn Georgies
-    bool public paused;//contract can be paused
+    address public proposedLoanContract;
+    address public proposedAdmin;
+    uint256 public proposalTime;
     mapping(address => bool) public blacklisted;
 
     //events
-    event AdminChanged(address _newAdmin);
     event BlacklistStatusChanged(address _addy, bool _status);
-    event ContractPauseChanged(bool _paused);
-    event LoanContractChanged(address _newLoanContract);
+    event SystemUpdateProposal(address _proposedAdmin, address _proposedLoanContract);
+    event SystemVariablesUpdated(address _admin, address _loanContract);
 
     //functions
     /**
@@ -75,23 +76,27 @@ contract Georgies is Token{
     }
 
     /**
-     * @dev function to change the admin
-     * @param _newAdmin address of new admin
+     * @dev function to change the admin/loandContract
+     * @param _proposedAdmin address of new admin
+     * @param _proposedLoanContract address of new loan contract
      */
-    function changeAdmin(address _newAdmin) external{
+    function updateSystemVariables(address _proposedAdmin, address _proposedLoanContract) external{
         require(msg.sender == admin);
-        admin = _newAdmin;
-        emit AdminChanged(_newAdmin);
+        proposalTime = block.timestamp;
+        proposedAdmin = _proposedAdmin;
+        proposedLoanContract = _proposedLoanContract;
+        emit SystemUpdateProposal(_proposedAdmin, _proposedLoanContract);
     }
     
     /**
-     * @dev function for the admin to change the loanContract
-     * @param _newLoanContract address of new loanContract
+     * @dev function to finalize an update after 7 days
      */
-    function changeLoanContract(address _newLoanContract) external{
+    function finalizeUpdate() external{
         require(msg.sender == admin);
-        loanContract = _newLoanContract;
-        emit LoanContractChanged(_newLoanContract);
+        require(block.timestamp - proposalTime > 7 days);
+        loanContract = proposedLoanContract;
+        admin = proposedAdmin;
+        emit SystemVariablesUpdated(admin, loanContract);
     }
     
     /**
@@ -102,15 +107,6 @@ contract Georgies is Token{
     function mint(address _to,uint256 _amount) external{
         require(msg.sender == loanContract);
         _mint(_to,_amount);
-    }
-
-    /**
-     * @dev function for the admin to pause the contract
-     */
-    function togglePause() external{
-        require(msg.sender == admin);
-        paused = !paused;
-        emit ContractPauseChanged(paused);
     }
 
     /*Getters*/
@@ -132,7 +128,6 @@ contract Georgies is Token{
      */
     function _move(address _src, address _dst, uint256 _amount) internal override{
         require(!blacklisted[_src] && !blacklisted[_dst]);
-        require(!paused);
         balance[_src] = balance[_src] - _amount;//will overflow if too big
         balance[_dst] = balance[_dst] + _amount;
         emit Transfer(_src, _dst, _amount);

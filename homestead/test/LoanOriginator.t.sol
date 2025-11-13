@@ -50,9 +50,9 @@ contract LoanOriginatorTest is Test {
     function test_SetLineOfCredit() public{
         address _a4 = vm.addr(4);
         vm.expectRevert();
-        loanO.setLineOfCredit(_a4,10 ether,2000);
+        loanO.setLineOfCredit(_a4,10 ether,2000,false);
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a4,10 ether,2000);
+        loanO.setLineOfCredit(_a4,10 ether,2000,false);
         (uint256 amount,,,uint256 interestRate) = loanO.getCreditDetails(_a4);
         assertEq(loanO.borrowers(0),_a4);
         assertEq(amount,10 ether);
@@ -70,7 +70,7 @@ contract LoanOriginatorTest is Test {
     function test_PayLoan() public{
         address _a4 = vm.addr(4);
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a4,10 ether,2000);
+        loanO.setLineOfCredit(_a4,10 ether,2000,false);
         vm.prank(_a1);
         loanO.withdrawLoan(_a4,10 ether);
         vm.warp(block.timestamp + YEAR);
@@ -99,7 +99,7 @@ contract LoanOriginatorTest is Test {
     function test_WithdrawLoan() public{ 
         address _a4 = vm.addr(4);
         vm.prank(_a1);
-        loanO.setLineOfCredit(_a4,10 ether,2000);
+        loanO.setLineOfCredit(_a4,10 ether,2000,false);
         vm.expectRevert();
         loanO.withdrawLoan(_a4,5 ether);
         vm.prank(_a1);

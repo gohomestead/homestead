@@ -23,12 +23,14 @@ contract Henries is Token{
     //storage
     address public admin;//address of the admin
     address public feeContract;//address of feeContract
+    address public stakingContract; //address of the stakingContract
 
     //events
     event AdminChanged(address _newAdmin);
     event FeeContractChanged(address _newFeeContract);
     event HenriesBurned(address _from, uint256 _amount);
     event HenriesMinted(address _to, uint256 _amount);
+    event StakingContractChanged(address _newStakingContract);
 
 
     //functions
@@ -75,19 +77,23 @@ contract Henries is Token{
     }
     
     /**
+     * @dev function for the admin to change the staking contract
+     * @param _newStakingContract address of new staking contract
+     */
+    function changeStakingContract(address _newStakingContract) external{
+        require(msg.sender == admin);
+        require(_newStakingContract != address(0));
+        stakingContract = _newStakingContract;
+        emit StakingContractChanged(_newStakingContract);
+    }
+
+    /**
      * @dev allows the admin contract to mint henry tokens
-     * @param _to address to mint tokens to
      * @param _amount amount of tokens to mint
      */
-    function mint(address[] calldata _to, uint256[] calldata _amount) external{
+    function mint(uint256 _amount) external{
         require(msg.sender == admin);
-        require(_to.length == _amount.length);
-        uint256 _total;
-        for(uint _i=0;_i<_to.length;_i++){
-            _mint(_to[_i],_amount[_i]);
-            _total += _amount[_i];
-            emit HenriesMinted(_to[_i],_amount[_i]);
-        }
-        _mint(admin,_total/100);//1% of mint goes to admin
+        _mint(stakingContract, _amount*99/100);
+        _mint(admin,_amount/100);//1% of mint goes to admin
     }
 }

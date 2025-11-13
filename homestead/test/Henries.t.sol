@@ -43,7 +43,7 @@ contract HenriesTest is Test {
         vm.prank(_a1);
         henries.changeFeeContract(_a2);
         vm.prank(_a1);
-        henries.mint(_t,_b);
+        henries.mint(_b);
         assertEq(henries.totalSupply(),201 ether);
         assertEq(henries.balanceOf(_a3),100 ether);
         assertEq(henries.balanceOf(_a1),101 ether);
