@@ -40,6 +40,12 @@ contract Georgies is Token{
         admin = _admin;
     }
 
+    function init(address _loanContract) external{
+        require(loanContract == address(0));
+        require(_loanContract != address(0));
+        require(msg.sender == admin);
+        loanContract = _loanContract;
+    }
     /**
      * @dev function for the admin to blacklist update an array
      * @param _addresses addresses of users to blacklist (or unblacklist)
@@ -82,6 +88,7 @@ contract Georgies is Token{
      */
     function updateSystemVariables(address _proposedAdmin, address _proposedLoanContract) external{
         require(msg.sender == admin);
+        require(_proposedLoanContract != address(0));
         proposalTime = block.timestamp;
         proposedAdmin = _proposedAdmin;
         proposedLoanContract = _proposedLoanContract;

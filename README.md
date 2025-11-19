@@ -3,10 +3,11 @@
 </p>
 
 
-<b>Homestead</b> is a crypto system to provide subsizided interest rates for mortgages. The system allows borrowers to mint tokens that represent lines of credit.  These tokens can then be sold by the borrower in order to purchase a home or pay off previous financing.  Over time, the borrower will repurchase the token from the market to pay off their loans, burning the token. 
+<b>Homestead</b>  uses monetary premium and digital asset speculation to subsidize interest rates for borrowers. 
 
-The protocol consists of two core components: subsidized credit tokens (Georgies) representing debt obligations and a fee tokens (Henries) that help to subsidize interest rates and provide a mechanism for price stability. This whitepaper outlines the protocol's mechanics, economic incentives, regulatory considerations, and risk factors.
+The system mints credit tokens that are backed by claims on a borrower’s real estate.  These tokens can then be sold by to purchase the home or pay off previous financing.  Over time, the borrower will repurchase the token from the market to pay off their loans.
 
+Holders of these credit tokens are minted an ownership token.  Interest from the mortgages as well as fees inherit in the system are used to buy back and burn this ownership token.  
 
 ## Setting up and testing
 

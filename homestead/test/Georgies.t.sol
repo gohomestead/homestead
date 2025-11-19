@@ -13,45 +13,28 @@ contract GeorgiesTest is Test {
         _a1 = vm.addr(1);
         _a2 = vm.addr(2);
         georgies = new Georgies(_a1,"testG","tst");
+        vm.prank(_a1);
+        georgies.init(_a2);
     }
 
-    function test_ConstructorAndChangeLoanContract() public{
+    function test_ConstructorAndUpdateSystemVariables() public{
         assertEq(address(georgies.admin()),_a1);
+        address _a3 = vm.addr(3);
+        address _a4 = vm.addr(4);
         vm.expectRevert();
-        georgies.changeLoanContract(_a2);
+        georgies.updateSystemVariables(_a3,_a4);
         vm.prank(_a1);
-        georgies.changeLoanContract(_a2);
+        georgies.updateSystemVariables(_a3,_a4);
         assertEq(georgies.loanContract(),_a2);
-    }
-
-    function test_togglePause() public{
+        assertEq(georgies.admin(),_a1);
+        vm.warp(block.timestamp + 86401*7);
         vm.prank(_a1);
-        georgies.changeLoanContract(_a2);
-        vm.prank(_a2);
-        georgies.mint(_a1, 3 ether);
-        assertEq(georgies.paused(),false);
-        vm.expectRevert();
-        georgies.togglePause();
-        vm.prank(_a1);
-        georgies.togglePause();
-        assertEq(georgies.paused(),true);
-        vm.expectRevert();
-        vm.prank(_a1);
-        georgies.transfer(_a2,1 ether);
-
-    }
-
-    function test_changeAdmin() public{
-        vm.expectRevert();
-        georgies.changeAdmin(_a2);
-        vm.prank(_a1);
-        georgies.changeAdmin(_a2);
-        assertEq(georgies.admin(),_a2);
+        georgies.finalizeUpdate();
+        assertEq(georgies.loanContract(),_a4);
+        assertEq(georgies.admin(),_a3);
     }
 
     function test_mint() public{
-        vm.prank(_a1);
-        georgies.changeLoanContract(_a2);
         vm.expectRevert();
         georgies.mint(_a1,2 ether);
         vm.prank(_a2);
@@ -61,8 +44,6 @@ contract GeorgiesTest is Test {
     }
     
     function test_burn() public{
-        vm.prank(_a1);
-        georgies.changeLoanContract(_a2);
         vm.prank(_a2);
         georgies.mint(_a2, 3 ether);
         vm.expectRevert();
@@ -81,8 +62,6 @@ contract GeorgiesTest is Test {
         address _a5 = vm.addr(5);
         address[] memory _t = new address[](2);
         bool[] memory _b = new bool[](2);
-        vm.prank(_a1);
-        georgies.changeLoanContract(_a2);
         vm.prank(_a2);
         georgies.mint(_a3, 3 ether);
         vm.prank(_a3);

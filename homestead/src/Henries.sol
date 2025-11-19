@@ -25,13 +25,16 @@ contract Henries is Token{
     address public feeContract;//address of feeContract
     address public stakingContract; //address of the stakingContract
 
+    address public proposedStakingContract;
+    address public proposedFeeContract;
+    address public proposedAdmin;
+    uint256 public proposalTime;
+
     //events
-    event AdminChanged(address _newAdmin);
-    event FeeContractChanged(address _newFeeContract);
     event HenriesBurned(address _from, uint256 _amount);
     event HenriesMinted(address _to, uint256 _amount);
-    event StakingContractChanged(address _newStakingContract);
-
+    event SystemUpdateProposal(address _proposedAdmin, address feeContract, address _proposedStakingContract);
+    event SystemVariablesUpdated(address _admin, address _feeContract, address _stakingContract);
 
     //functions
     /**
@@ -54,37 +57,30 @@ contract Henries is Token{
         emit HenriesBurned(_from,_amount);
     }
 
-    /**
-     * @dev function to change the admin
-     * @param _newAdmin address of new admin
+/**
+     * @dev function to change the admin/loandContract
+     * @param _proposedAdmin address of new admin
+     * @param _proposedStakingContract address of new loan contract
      */
-    function changeAdmin(address _newAdmin) external{
+    function updateSystemVariables(address _proposedAdmin, address _proposedFeeContract, address _proposedStakingContract) external{
         require(msg.sender == admin);
-        require(_newAdmin != address(0));
-        admin = _newAdmin;
-        emit AdminChanged(_newAdmin);
+        proposalTime = block.timestamp;
+        proposedAdmin = _proposedAdmin;
+        proposedFeeContract = _proposedFeeContract;
+        proposedStakingContract = _proposedStakingContract;
+        emit SystemUpdateProposal(_proposedAdmin, _proposedFeeContract, _proposedStakingContract);
     }
     
     /**
-     * @dev function for the admin to change the fee contract
-     * @param _newFeeContract address of new fee contract
+     * @dev function to finalize an update after 7 days
      */
-    function changeFeeContract(address _newFeeContract) external{
+    function finalizeUpdate() external{
         require(msg.sender == admin);
-        require(_newFeeContract != address(0));
-        feeContract = _newFeeContract;
-        emit FeeContractChanged(_newFeeContract);
-    }
-    
-    /**
-     * @dev function for the admin to change the staking contract
-     * @param _newStakingContract address of new staking contract
-     */
-    function changeStakingContract(address _newStakingContract) external{
-        require(msg.sender == admin);
-        require(_newStakingContract != address(0));
-        stakingContract = _newStakingContract;
-        emit StakingContractChanged(_newStakingContract);
+        require(block.timestamp - proposalTime > 7 days);
+        admin = proposedAdmin;
+        feeContract = proposedFeeContract;
+        stakingContract = proposedStakingContract;
+        emit SystemVariablesUpdated(admin, feeContract, stakingContract);
     }
 
     /**

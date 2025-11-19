@@ -5,25 +5,32 @@ import "./interfaces/IERC20.sol";
 import "./interfaces/ILoanOriginator.sol";
 
 contract Collateral {
-
-    address public admin; 
-    mapping(address => uint256) public collateralBalance;
+    /*Storage*/
     IERC20 public collateralToken;
-    uint256 public totalCollateral;
     ILoanOriginator public loanContract;
+    
+    address public admin; 
+    address public proposedLoanContract;
+    address public proposedAdmin;
+    uint256 public proposalTime;
+    uint256 public totalCollateral;
 
+    mapping(address => uint256) public collateralBalance;
+
+    /*Events*/
     event CollateralDeposited(address _borrower, uint256 _amount);
     event CollateralWithdrawn(address _borrower, uint256 _amount);
     event SystemUpdateProposal(address _proposedAdmin, address _proposedLoanContract);
     event SystemVariablesUpdated(address _admin, address _loanContract);
-
+    
+    /*Functions*/
     constructor(address _collateralToken, address _loanContract, address _admin){
         loanContract = ILoanOriginator(_loanContract);
         collateralToken = IERC20(_collateralToken);
         admin = _admin;
     }
 
-        /**
+    /**
      * @dev function to change the admin/loandContract
      * @param _proposedAdmin address of new admin
      * @param _proposedLoanContract address of new loan contract
@@ -42,22 +49,22 @@ contract Collateral {
     function finalizeUpdate() external{
         require(msg.sender == admin);
         require(block.timestamp - proposalTime > 7 days);
-        loanContract = proposedLoanContract;
+        loanContract = ILoanOriginator(proposedLoanContract);
         admin = proposedAdmin;
-        emit SystemVariablesUpdated(admin, loanContract);
+        emit SystemVariablesUpdated(admin, proposedLoanContract);
     }
 
-    function depositCollateral(uint256 _amount){
+    function depositCollateral(uint256 _amount) external{
         require(collateralToken.transferFrom(msg.sender,address(this), _amount));
         collateralBalance[msg.sender] = collateralBalance[msg.sender]  + _amount;
         totalCollateral += _amount;
         emit CollateralDeposited(msg.sender, _amount);
     }
 
-    function redeemCollateral(uint256 _amount){
+    function redeemCollateral(uint256 _amount) external{
         uint256 _amountTaken;
-        (,_amountTaken,,) = loanContract.getCreditDetails(msg.sender);
-        require((collateralBalance[msg.sender] - _amount) * .95 > _amountTaken);
+        _amountTaken = loanContract.getCurrentAmountTaken(msg.sender);
+        require((collateralBalance[msg.sender] - _amount) > _amountTaken);
         collateralBalance[msg.sender] = collateralBalance[msg.sender]  - _amount;
         totalCollateral -= _amount;
         collateralToken.transfer(msg.sender,_amount);
@@ -66,7 +73,7 @@ contract Collateral {
 
     //allows the loanContract to sendOutTheUSDC at cost if there is a default
     function sendCollateral(address _to, address _from, uint256 _amount) external{
-        require(msg.sender == loanContract);
+        require(msg.sender == address(loanContract));
         if(_amount > collateralBalance[_from]){
             _amount = collateralBalance[_from];
         }

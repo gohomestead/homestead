@@ -5,7 +5,7 @@ import {Test, console} from "forge-std/Test.sol";
 import { Treasury } from "../src/Treasury.sol";
 import {TestToken } from "../src/test/TestToken.sol";
 
-contract GeorgiesTest is Test {
+contract TreasuryTest is Test {
     TestToken public georgies;
     Treasury public  treasury;
     address _a1;
