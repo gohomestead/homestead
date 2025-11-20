@@ -20,12 +20,11 @@ contract FeeContract {
     //storage
     Henries public henries;//Henries Address
     IERC20 public georgies;//Georgies address
-    uint256 public auctionFrequency;//auction frequency in seconds
 
-    //bid variables
+    address public topBidder;//current top bidder in the round
+    uint256 public auctionFrequency;//auction frequency in seconds
     uint256 public currentTopBid;//current top bid (in georgies)
     uint256 public endDate;//end date of current auction round
-    address public topBidder;//current top bidder in the round
 
     //events
     event AuctionClosed(address _winner, uint256 _amount);

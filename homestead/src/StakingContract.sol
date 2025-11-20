@@ -9,13 +9,16 @@ import "./Token.sol";
  @dev allows you to stake your georgies so you get Henries as a reward
  */
 contract StakingContract is Token{
-    IERC20 public henries;
-    IERC20 public georgies; 
 
-    //events
+    /*Storage*/
+    IERC20 public georgies; 
+    IERC20 public henries;
+
+    /*Events*/
     event Stake(address _stake, uint256 _amount);
     event Unstake(address _staker, uint256 _amount);
 
+    /*Functions*/
     /**
      * @dev starts the Staking Contract
      * @param _henries the address of the henries token
@@ -33,7 +36,7 @@ contract StakingContract is Token{
         emit Stake(msg.sender,_amount);
     }
 
-    function  unStake(uint256 _amount) external{
+    function  unstake(uint256 _amount) external{
         require(balance[msg.sender] >= _amount, "must have tokens");
         uint256 _pctOwnership = balance[msg.sender] * 1 ether / supply;
         _burn(msg.sender,_amount);

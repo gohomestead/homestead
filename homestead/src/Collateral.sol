@@ -9,9 +9,9 @@ contract Collateral {
     IERC20 public collateralToken;
     ILoanOriginator public loanContract;
     
-    address public admin; 
+    address public admin;
+    address public proposedAdmin; 
     address public proposedLoanContract;
-    address public proposedAdmin;
     uint256 public proposalTime;
     uint256 public totalCollateral;
 
@@ -30,19 +30,13 @@ contract Collateral {
         admin = _admin;
     }
 
-    /**
-     * @dev function to change the admin/loandContract
-     * @param _proposedAdmin address of new admin
-     * @param _proposedLoanContract address of new loan contract
-     */
-    function updateSystemVariables(address _proposedAdmin, address _proposedLoanContract) external{
-        require(msg.sender == admin);
-        proposalTime = block.timestamp;
-        proposedAdmin = _proposedAdmin;
-        proposedLoanContract = _proposedLoanContract;
-        emit SystemUpdateProposal(_proposedAdmin, _proposedLoanContract);
+    function depositCollateral(uint256 _amount) external{
+        require(collateralToken.transferFrom(msg.sender,address(this), _amount));
+        collateralBalance[msg.sender] = collateralBalance[msg.sender]  + _amount;
+        totalCollateral += _amount;
+        emit CollateralDeposited(msg.sender, _amount);
     }
-    
+
     /**
      * @dev function to finalize an update after 7 days
      */
@@ -52,13 +46,6 @@ contract Collateral {
         loanContract = ILoanOriginator(proposedLoanContract);
         admin = proposedAdmin;
         emit SystemVariablesUpdated(admin, proposedLoanContract);
-    }
-
-    function depositCollateral(uint256 _amount) external{
-        require(collateralToken.transferFrom(msg.sender,address(this), _amount));
-        collateralBalance[msg.sender] = collateralBalance[msg.sender]  + _amount;
-        totalCollateral += _amount;
-        emit CollateralDeposited(msg.sender, _amount);
     }
 
     function redeemCollateral(uint256 _amount) external{
@@ -83,7 +70,21 @@ contract Collateral {
         emit CollateralWithdrawn(_from,_amount);
     }   
 
-    function getCollateralBalance(address _borrower) external returns(uint256){
+    /**
+     * @dev function to change the admin/loandContract
+     * @param _proposedAdmin address of new admin
+     * @param _proposedLoanContract address of new loan contract
+     */
+    function updateSystemVariables(address _proposedAdmin, address _proposedLoanContract) external{
+        require(msg.sender == admin);
+        proposalTime = block.timestamp;
+        proposedAdmin = _proposedAdmin;
+        proposedLoanContract = _proposedLoanContract;
+        emit SystemUpdateProposal(_proposedAdmin, _proposedLoanContract);
+    }
+
+    /*Getters*/
+    function getCollateralBalance(address _borrower) external view returns(uint256){
         return collateralBalance[_borrower];
     }
 }

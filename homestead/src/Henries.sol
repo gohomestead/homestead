@@ -23,11 +23,10 @@ contract Henries is Token{
     //storage
     address public admin;//address of the admin
     address public feeContract;//address of feeContract
-    address public stakingContract; //address of the stakingContract
-
-    address public proposedStakingContract;
-    address public proposedFeeContract;
     address public proposedAdmin;
+    address public proposedFeeContract;
+    address public proposedStakingContract;
+    address public stakingContract; //address of the stakingContract
     uint256 public proposalTime;
 
     //events
@@ -56,20 +55,6 @@ contract Henries is Token{
         _burn(_from, _amount);
         emit HenriesBurned(_from,_amount);
     }
-
-/**
-     * @dev function to change the admin/loandContract
-     * @param _proposedAdmin address of new admin
-     * @param _proposedStakingContract address of new loan contract
-     */
-    function updateSystemVariables(address _proposedAdmin, address _proposedFeeContract, address _proposedStakingContract) external{
-        require(msg.sender == admin);
-        proposalTime = block.timestamp;
-        proposedAdmin = _proposedAdmin;
-        proposedFeeContract = _proposedFeeContract;
-        proposedStakingContract = _proposedStakingContract;
-        emit SystemUpdateProposal(_proposedAdmin, _proposedFeeContract, _proposedStakingContract);
-    }
     
     /**
      * @dev function to finalize an update after 7 days
@@ -91,5 +76,19 @@ contract Henries is Token{
         require(msg.sender == admin);
         _mint(stakingContract, _amount*99/100);
         _mint(admin,_amount/100);//1% of mint goes to admin
+    }
+
+    /**
+     * @dev function to change the admin/loandContract
+     * @param _proposedAdmin address of new admin
+     * @param _proposedStakingContract address of new loan contract
+     */
+    function updateSystemVariables(address _proposedAdmin, address _proposedFeeContract, address _proposedStakingContract) external{
+        require(msg.sender == admin);
+        proposalTime = block.timestamp;
+        proposedAdmin = _proposedAdmin;
+        proposedFeeContract = _proposedFeeContract;
+        proposedStakingContract = _proposedStakingContract;
+        emit SystemUpdateProposal(_proposedAdmin, _proposedFeeContract, _proposedStakingContract);
     }
 }

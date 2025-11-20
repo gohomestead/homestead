@@ -39,9 +39,18 @@ contract CollateralTest is Test {
         assertEq(address(collateral.admin()),_a3);
     }
 
-    // function test_depositCollateral() public{
-
-    // }
+    function test_depositCollateral() public{
+        vm.prank(_a3);
+        vm.expectRevert();
+        collateral.depositCollateral(50 ether);
+        vm.prank(_a3);
+        token.approve(address(collateral), 50 ether);
+        vm.prank(_a3);
+        collateral.depositCollateral(50 ether);
+        assertEq(collateral.totalCollateral(),50 ether);
+        assertEq(collateral.getCollateralBalance(_a3),50 ether);
+        assertEq(token.balanceOf(_a3),50 ether);
+    }
 
     // function test_reddemCollateral() public{
 

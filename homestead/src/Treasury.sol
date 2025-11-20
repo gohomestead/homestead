@@ -24,17 +24,19 @@ import "./interfaces/ILoanOriginator.sol";
 **/
 contract Treasury{
 
-    //storage
-    address public admin;//admin can send funds from this contract
+    /*Storage*/
     IERC20 public georgies;
+
+    address public admin;//admin can send funds from this contract
     uint256 public totalOut;//total amount given out from the contract
+
     mapping(address => uint256) public fundsGivenByAddress;
 
-    //events
+    /*Events*/
     event AdminChanged(address _newAdmin);
     event FundsDistributed(address _to, uint256 _amount);
 
-    //functions
+    /*Functions*/
     /**
      * @dev constructor to initialize contract and token
      */
@@ -68,7 +70,8 @@ contract Treasury{
         emit FundsDistributed(_to, _amount);
     }
 
-        /**
+    /*Getters*/
+    /**
      * @dev function to retrieve funds given to each address
      * @param _addy address of interest
      * @return uint256 of number of georgies

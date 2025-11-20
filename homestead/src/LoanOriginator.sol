@@ -17,30 +17,32 @@ import "./interfaces/ICollateral.sol";
 contract LoanOriginator {
     //storage
     struct LineOfCredit {
+        bool isCollateral;
         uint256 amount;//amount of credit a borrower is approved for
         uint256 amountTaken;//amount taken out or outstanding
         uint256 calcDate;//last date interest was calculated
         uint256 interestRate;//interest rate on loan; 100,000 = 100%
         uint256 startDate;
-        bool isCollateral;
     }
+
+    ICollateral public collateralContract;
+    IGeorgies public  georgies;//address of base georgies token
 
     address public admin;//admin of the system, can change feeContract, treasury, repay loans (default), approve loans, and change fee
     address public feeContract;//address that accumulates system fees
-    address public treasury;//address that gets interest accumulation of georgies (to balance system)
+    address public proposedAdmin;
     address public proposedCollateralContract;
     address public proposedFeeContract;
     address public proposedTreasury;
-    address public proposedAdmin;
-    uint256 public proposedFee;
-    uint256 public proposedCollateralDiscount;
-    uint256 public proposalTime;
+    address public treasury;//address that gets interest accumulation of georgies (to balance system)
     address[] public borrowers;//list of borrowers all time
-    ICollateral public collateralContract;
-    IGeorgies public  georgies;//address of base georgies token
     uint256 constant public YEAR = 86400*365;
     uint256 public collateralDiscount;
     uint256 public fee; //fee paid on minting and burning of georgies; 100,000 = 100%  
+    uint256 public proposedCollateralDiscount;
+    uint256 public proposedFee;
+    uint256 public proposalTime;
+
     mapping(address => LineOfCredit) public linesOfCredit;
 
     //events
@@ -64,32 +66,30 @@ contract LoanOriginator {
         admin = _admin;
     }
 
-    function init(address _collateralContract, address _treasury, uint256 _fee, uint256 _collateralDiscount) external{
-        require(treasury == address(0));
-        require(_treasury != address(0));
-        collateralContract = ICollateral(_collateralContract);
-        treasury = _treasury;
-        fee = _fee;
-        collateralDiscount = _collateralDiscount;
+    function borrowViaCollateral(address _to, uint256 _amount) external{
+        require(msg.sender == admin || msg.sender == _to);
+        uint256 _collateral = collateralContract.getCollateralBalance(_to);
+        _collateral = _collateral * collateralDiscount;
+        LineOfCredit storage _l  = linesOfCredit[_to];
+        require(block.timestamp > _l.startDate + 1 days);
+        require(_l.isCollateral);
+        uint256 _interest;
+        if(_l.amountTaken > 0){
+            uint256 _newValue = _l.amountTaken + _l.amountTaken* _l.interestRate * 100000 * (block.timestamp - _l.calcDate)/YEAR/100000/100000;
+            require(_newValue <= _collateral);
+            _interest = _newValue - _l.amountTaken;
+            georgies.mint(treasury,_interest);
+        }
+        _l.amountTaken = _amount + _l.amountTaken + _interest;
+        require(_l.amountTaken <= _l.amount);
+        require(_l.amountTaken <= _collateral);
+        _l.calcDate = block.timestamp;
+        uint256 _fee = _amount * fee/100000;
+        emit LoanTaken(_to,_amount);
+        georgies.mint(_to,_amount - _fee);
+        georgies.mint(feeContract,_fee);
     }
 
-        /**
-     * @dev function to change the admin/loandContract
-     * @param _admin address of new admin
-     * @param _collateralContract address of new loan contract
-     */
-    function updateSystemVariables(address _admin, address _collateralContract, address _feeContract, address _treasury, uint256 _fee, uint256 _collateralDiscount) external{
-        require(msg.sender == admin);
-        proposalTime = block.timestamp;
-        proposedAdmin = _admin;
-        proposedCollateralContract = _collateralContract;
-        proposedFeeContract = _feeContract;
-        proposedTreasury = _treasury;
-        proposedFee = _fee;
-        proposedCollateralDiscount = _collateralDiscount;
-        emit SystemUpdateProposal(_admin,_collateralContract,_feeContract,_treasury,_fee,_collateralDiscount);
-    }
-    
     /**
      * @dev function to finalize an update after 7 days
      */
@@ -103,6 +103,15 @@ contract LoanOriginator {
         fee = proposedFee;
         collateralDiscount = proposedCollateralDiscount;
         emit SystemVariablesUpdated(admin,address(collateralContract), feeContract, treasury, fee, collateralDiscount);
+    }
+
+    function init(address _collateralContract, address _treasury, uint256 _fee, uint256 _collateralDiscount) external{
+        require(treasury == address(0));
+        require(_treasury != address(0));
+        collateralContract = ICollateral(_collateralContract);
+        treasury = _treasury;
+        fee = _fee;
+        collateralDiscount = _collateralDiscount;
     }
     
     /**
@@ -133,52 +142,6 @@ contract LoanOriginator {
         _l.calcDate = block.timestamp;
         emit LoanPayment(_borrower,_amount);
     } 
-
-    /**
-     * @dev function for admin to set a new line of credit for a borrower
-     * @param _to address of borrower to mint tokens to
-     * @param _amount amount of tokens to mint to borrower
-     * @param _rate interest rate given to loan
-     * @param _isCollateral bool for whether or not is for onchain collateral or off-chain collateral loans
-     */
-    function setLineOfCredit(address _to, uint256 _amount, uint256 _rate, bool _isCollateral) external{
-        require(msg.sender == admin);
-        LineOfCredit storage _l  = linesOfCredit[_to];
-        //require(_l.amountTaken == 0);//change? 
-        if(_l.amount == 0){
-            borrowers.push(_to);
-        }
-        _l.amount = _amount;
-        _l.interestRate = _rate;
-        _l.isCollateral = _isCollateral;
-        _l.startDate = block.timestamp;
-        emit LineOfCreditSet(_to, _amount, _rate);
-    }
-
-
-    function borrowViaCollateral(address _to, uint256 _amount) external{
-        require(msg.sender == admin || msg.sender == _to);
-        uint256 _collateral = collateralContract.getCollateralBalance(_to);
-        _collateral = _collateral * collateralDiscount;
-        LineOfCredit storage _l  = linesOfCredit[_to];
-        require(block.timestamp > _l.startDate + 1 days);
-        require(_l.isCollateral);
-        uint256 _interest;
-        if(_l.amountTaken > 0){
-            uint256 _newValue = _l.amountTaken + _l.amountTaken* _l.interestRate * 100000 * (block.timestamp - _l.calcDate)/YEAR/100000/100000;
-            require(_newValue <= _collateral);
-            _interest = _newValue - _l.amountTaken;
-            georgies.mint(treasury,_interest);
-        }
-        _l.amountTaken = _amount + _l.amountTaken + _interest;
-        require(_l.amountTaken <= _l.amount);
-        require(_l.amountTaken <= _collateral);
-        _l.calcDate = block.timestamp;
-        uint256 _fee = _amount * fee/100000;
-        emit LoanTaken(_to,_amount);
-        georgies.mint(_to,_amount - _fee);
-        georgies.mint(feeContract,_fee);
-    }
 
     function payOffCollateralLoan(address _borrower, uint256 _amount) external{
         uint256 _collateral = collateralContract.getCollateralBalance(_borrower);
@@ -214,6 +177,44 @@ contract LoanOriginator {
         emit LoanPayment(_borrower,_amount);
     }
 
+    /**
+     * @dev function for admin to set a new line of credit for a borrower
+     * @param _to address of borrower to mint tokens to
+     * @param _amount amount of tokens to mint to borrower
+     * @param _rate interest rate given to loan
+     * @param _isCollateral bool for whether or not is for onchain collateral or off-chain collateral loans
+     */
+    function setLineOfCredit(address _to, uint256 _amount, uint256 _rate, bool _isCollateral) external{
+        require(msg.sender == admin);
+        LineOfCredit storage _l  = linesOfCredit[_to];
+        //require(_l.amountTaken == 0);//change? 
+        if(_l.amount == 0){
+            borrowers.push(_to);
+        }
+        _l.amount = _amount;
+        _l.interestRate = _rate;
+        _l.isCollateral = _isCollateral;
+        _l.startDate = block.timestamp;
+        emit LineOfCreditSet(_to, _amount, _rate);
+    }
+
+    /**
+     * @dev function to change the admin/loandContract
+     * @param _admin address of new admin
+     * @param _collateralContract address of new loan contract
+     */
+    function updateSystemVariables(address _admin, address _collateralContract, address _feeContract, address _treasury, uint256 _fee, uint256 _collateralDiscount) external{
+        require(msg.sender == admin);
+        proposalTime = block.timestamp;
+        proposedAdmin = _admin;
+        proposedCollateralContract = _collateralContract;
+        proposedFeeContract = _feeContract;
+        proposedTreasury = _treasury;
+        proposedFee = _fee;
+        proposedCollateralDiscount = _collateralDiscount;
+        emit SystemUpdateProposal(_admin,_collateralContract,_feeContract,_treasury,_fee,_collateralDiscount);
+    }
+    
     /**
      * @dev function to take out a loan once approved
      * @param _to address of person taking out loan
@@ -252,7 +253,8 @@ contract LoanOriginator {
             LineOfCredit storage _l  = linesOfCredit[_to];
             return (_l.amount, _l.amountTaken, _l.calcDate, _l.interestRate);
     }
-        /**
+    
+    /**
      * @dev function to get details of a parties loans and approvals
      * @param _to address of person taking out loan
      */
@@ -260,6 +262,4 @@ contract LoanOriginator {
             LineOfCredit storage _l  = linesOfCredit[_to];
             return _l.amountTaken + _l.amountTaken* _l.interestRate * 100000 * (block.timestamp - _l.calcDate)/YEAR/100000/100000;
     }
-
-
 }
