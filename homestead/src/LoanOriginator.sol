@@ -245,7 +245,7 @@ contract LoanOriginator {
      * @param _to address of person taking out loan
      */
     function getCreditDetails(address _to) external view returns(
-        uint256 amount,
+        uint256 _amount,
         uint256 _amountTaken,
         uint256 _calcDate,
         uint256 _interestRate
@@ -262,4 +262,5 @@ contract LoanOriginator {
             LineOfCredit storage _l  = linesOfCredit[_to];
             return _l.amountTaken + _l.amountTaken* _l.interestRate * 100000 * (block.timestamp - _l.calcDate)/YEAR/100000/100000;
     }
+
 }

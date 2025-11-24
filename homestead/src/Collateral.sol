@@ -59,7 +59,7 @@ contract Collateral {
     }
 
     //allows the loanContract to sendOutTheUSDC at cost if there is a default
-    function sendCollateral(address _to, address _from, uint256 _amount) external{
+    function sendCollateral(address _from, address _to, uint256 _amount) external{
         require(msg.sender == address(loanContract));
         if(_amount > collateralBalance[_from]){
             _amount = collateralBalance[_from];
