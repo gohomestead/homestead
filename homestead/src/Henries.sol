@@ -30,8 +30,6 @@ contract Henries is Token{
     uint256 public proposalTime;
 
     //events
-    event HenriesBurned(address _from, uint256 _amount);
-    event HenriesMinted(address _to, uint256 _amount);
     event SystemUpdateProposal(address _proposedAdmin, address feeContract, address _proposedStakingContract);
     event SystemVariablesUpdated(address _admin, address _feeContract, address _stakingContract);
 
@@ -46,6 +44,19 @@ contract Henries is Token{
     }
 
     /**
+     * @dev function to init the fee contract and staking contract
+     * @param _feeContract address of fee Contract (can burn henries)
+     * @param _stakingContract address of staking Contract (gets minted henries)
+     */
+    function init(address _feeContract, address _stakingContract) external{
+        require(msg.sender == admin);
+        require(feeContract == address(0));
+        require(_feeContract != address(0));
+        feeContract = _feeContract;
+        stakingContract = _stakingContract;
+    }
+
+    /**
      * @dev allows the fee contract to burn tokens of users
      * @param _from address to burn tokens of
      * @param _amount amount of tokens to burn
@@ -53,7 +64,6 @@ contract Henries is Token{
     function burn(address _from, uint256 _amount) external{
         require(msg.sender == feeContract);
         _burn(_from, _amount);
-        emit HenriesBurned(_from,_amount);
     }
     
     /**
@@ -85,6 +95,7 @@ contract Henries is Token{
      */
     function updateSystemVariables(address _proposedAdmin, address _proposedFeeContract, address _proposedStakingContract) external{
         require(msg.sender == admin);
+        require(_proposedFeeContract != address(0));
         proposalTime = block.timestamp;
         proposedAdmin = _proposedAdmin;
         proposedFeeContract = _proposedFeeContract;
