@@ -35,7 +35,6 @@ contract LoanOriginator {
     address public proposedFeeContract;
     address public proposedTreasury;
     address public treasury;//address that gets interest accumulation of georgies (to balance system)
-    address[] public borrowers;//list of borrowers all time
     uint256 constant public YEAR = 86400*365;
     uint256 public collateralDiscount;
     uint256 public fee; //fee paid on minting and burning of georgies; 100,000 = 100%  
@@ -188,9 +187,6 @@ contract LoanOriginator {
         require(msg.sender == admin);
         LineOfCredit storage _l  = linesOfCredit[_to];
         //require(_l.amountTaken == 0);//change? 
-        if(_l.amount == 0){
-            borrowers.push(_to);
-        }
         _l.amount = _amount;
         _l.interestRate = _rate;
         _l.isCollateral = _isCollateral;

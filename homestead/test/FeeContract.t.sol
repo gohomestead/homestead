@@ -30,40 +30,39 @@ contract FeeContractTest is Test {
         assert(feeContract.endDate() > block.timestamp);
     }
 
-    // function test_Bid() public{
-    //     vm.startPrank(_a1);
-    //     vm.expectRevert();
-    //     feeContract.bid(0);
-    //     address _a2 = vm.addr(2);
-    //     henries.transfer(_a2,10 ether);
-    //     henries.approve(address(feeContract),1 ether);
-    //     feeContract.bid(1 ether);
-    //     assertEq(feeContract.currentTopBid(), 1 ether);
-    //     assertEq(feeContract.topBidder(), _a1);
-    //     assertEq(henries.balanceOf(_a1),89 ether);
-    //     vm.stopPrank();
-    //     vm.startPrank(_a2);
-    //     henries.approve(address(feeContract),2 ether);
-    //     feeContract.bid(2 ether);
-    //     assertEq(feeContract.currentTopBid(), 2 ether);
-    //     assertEq(feeContract.topBidder(), _a2);
-    //     assertEq(henries.balanceOf(_a1),90 ether);
-    //     assertEq(henries.balanceOf(_a2),8 ether);
-    // }
+    function test_Bid() public{
+        vm.startPrank(_a1);
+        vm.expectRevert();
+        feeContract.bid(0);
+        henries.transfer(_a2,10 ether);
+        henries.approve(address(feeContract),1 ether);
+        feeContract.bid(1 ether);
+        assertEq(feeContract.currentTopBid(), 1 ether);
+        assertEq(feeContract.topBidder(), _a1);
+        assertEq(henries.balanceOf(_a1),89 ether);
+        vm.stopPrank();
+        vm.startPrank(_a2);
+        henries.approve(address(feeContract),2 ether);
+        feeContract.bid(2 ether);
+        assertEq(feeContract.currentTopBid(), 2 ether);
+        assertEq(feeContract.topBidder(), _a2);
+        assertEq(henries.balanceOf(_a1),90 ether);
+        assertEq(henries.balanceOf(_a2),8 ether);
+    }
 
-    // function test_startNewAuction() public{
-    //     vm.startPrank(_a1);
-    //     georgies.mint(address(feeContract),2 ether);
-    //     henries.approve(address(feeContract),1 ether);
-    //     feeContract.bid(1 ether);
-    //     vm.warp(feeContract.endDate() + 1);
-    //     feeContract.startNewAuction();
-    //     assertEq(henries.balanceOf(_a1),99 ether);
-    //     assertEq(henries.totalSupply(),99 ether);
-    //     assertEq(feeContract.currentTopBid(),0);
-    //     assertEq(feeContract.topBidder(), _a1);
-    //     assert(feeContract.endDate() >  block.timestamp);
-    //     assertEq(georgies.balanceOf(_a1),2 ether);
-    //     assertEq(georgies.balanceOf(address(feeContract)),0);
-    // }
+    function test_startNewAuction() public{
+        vm.startPrank(_a1);
+        georgies.mint(address(feeContract),2 ether);
+        henries.approve(address(feeContract),1 ether);
+        feeContract.bid(1 ether);
+        vm.warp(feeContract.endDate() + 1);
+        feeContract.startNewAuction();
+        assertEq(henries.balanceOf(_a1),99 ether);
+        assertEq(henries.totalSupply(),99 ether);
+        assertEq(feeContract.currentTopBid(),0);
+        assertEq(feeContract.topBidder(), _a1);
+        assert(feeContract.endDate() >  block.timestamp);
+        assertEq(georgies.balanceOf(_a1),2 ether);
+        assertEq(georgies.balanceOf(address(feeContract)),0);
+    }
 }

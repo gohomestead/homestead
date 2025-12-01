@@ -56,7 +56,7 @@ contract GeorgiesTest is Test {
         assertEq(georgies.balanceOf(_a1),0);
     }
 
-    function test_blacklistUpdateand_move() public{
+    function test_blacklistUpdateand_moveAndBlacklistUserAndIsBlacklisted() public{
         address _a3 = vm.addr(3);
         address _a4 = vm.addr(4);
         address _a5 = vm.addr(5);
@@ -95,7 +95,7 @@ contract GeorgiesTest is Test {
         assertEq(georgies.balanceOf(_a3),2 ether);
         assertEq(georgies.balanceOf(_a4),0);
         assertEq(georgies.balanceOf(_a2),1 ether);
-         vm.expectRevert();
+        vm.expectRevert();
         georgies.blacklistUser(_a5,true);
         assertEq(georgies.isBlacklisted(_a5),false);
         vm.prank(_a1);
