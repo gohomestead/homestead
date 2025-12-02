@@ -36,7 +36,7 @@ contract LoanOriginator {
     address public proposedTreasury;
     address public treasury;//address that gets interest accumulation of georgies (to balance system)
     uint256 constant public YEAR = 86400*365;
-    uint256 public collateralDiscount;
+    uint256 public collateralDiscount;//pct that collateral counts for 100,000 = 100%
     uint256 public fee; //fee paid on minting and burning of georgies; 100,000 = 100%  
     uint256 public proposedCollateralDiscount;
     uint256 public proposedFee;
@@ -144,7 +144,7 @@ contract LoanOriginator {
 
     function payOffCollateralLoan(address _borrower, uint256 _amount) external{
         uint256 _collateral = collateralContract.getCollateralBalance(_borrower);
-        uint256 _adjCollateral = _collateral * collateralDiscount;
+        uint256 _adjCollateral = _collateral * collateralDiscount/100000;
         LineOfCredit storage _l  = linesOfCredit[_borrower];
         require(_l.amountTaken > 0);
         uint256 _currentValue =  _l.amountTaken + _l.amountTaken* _l.interestRate * 100000 * (block.timestamp - _l.calcDate)/YEAR/100000/100000; 
