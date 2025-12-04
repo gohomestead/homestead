@@ -65,30 +65,6 @@ contract LoanOriginator {
         admin = _admin;
     }
 
-    function borrowViaCollateral(address _to, uint256 _amount) external{
-        require(msg.sender == admin || msg.sender == _to);
-        uint256 _collateral = collateralContract.getCollateralBalance(_to);
-        _collateral = _collateral * collateralDiscount;
-        LineOfCredit storage _l  = linesOfCredit[_to];
-        require(block.timestamp > _l.startDate + 1 days);
-        require(_l.isCollateral);
-        uint256 _interest;
-        if(_l.amountTaken > 0){
-            uint256 _newValue = _l.amountTaken + _l.amountTaken* _l.interestRate * 100000 * (block.timestamp - _l.calcDate)/YEAR/100000/100000;
-            require(_newValue <= _collateral);
-            _interest = _newValue - _l.amountTaken;
-            georgies.mint(treasury,_interest);
-        }
-        _l.amountTaken = _amount + _l.amountTaken + _interest;
-        require(_l.amountTaken <= _l.amount);
-        require(_l.amountTaken <= _collateral);
-        _l.calcDate = block.timestamp;
-        uint256 _fee = _amount * fee/100000;
-        emit LoanTaken(_to,_amount);
-        georgies.mint(_to,_amount - _fee);
-        georgies.mint(feeContract,_fee);
-    }
-
     /**
      * @dev function to finalize an update after 7 days
      */
@@ -119,14 +95,29 @@ contract LoanOriginator {
      * @param _amount amount of loan to pay back (fee included in this amount)
      */
     function payLoan(address _borrower, uint256 _amount) external{
-        require(msg.sender == _borrower || msg.sender == admin, "must be authorized");
         LineOfCredit storage _l  = linesOfCredit[_borrower];
         require(_l.amountTaken > 0);
         uint256 _currentValue =  _l.amountTaken + _l.amountTaken* _l.interestRate * 100000 * (block.timestamp - _l.calcDate)/YEAR/100000/100000; 
         uint256 _interest = _currentValue - _l.amountTaken;
         uint256 _fee;
         uint256 _paymentAmount;
-        georgies.mint(treasury,_interest);
+        bool _isDefault;
+        if(_l.isCollateral){
+                uint256 _collateral = collateralContract.getCollateralBalance(_borrower);
+                uint256 _adjCollateral = _collateral * collateralDiscount/100000;
+                if(_currentValue <= _adjCollateral){
+                    require(msg.sender == _borrower || msg.sender == admin, "must be authorized");
+                }
+                else{
+                    _isDefault = true;
+                    if(_currentValue >= _collateral){
+                        _currentValue = _collateral;
+                    }
+                }
+        }
+        else{
+            require(msg.sender == _borrower || msg.sender == admin, "must be authorized");
+        }
         if(_amount > _currentValue + _currentValue * fee/100000){
             _fee = _currentValue  * fee/100000;
             _paymentAmount = _currentValue;
@@ -137,44 +128,16 @@ contract LoanOriginator {
         }
         require(georgies.transferFrom(msg.sender,feeContract,_fee), "transfer failed");
         georgies.burn(msg.sender,_paymentAmount);
+        if(_interest > 0){
+            georgies.mint(treasury,_interest);
+        }
+        if(_isDefault){
+            collateralContract.sendCollateral(msg.sender,_borrower,_paymentAmount);
+        }
         _l.amountTaken = _currentValue - _paymentAmount;
         _l.calcDate = block.timestamp;
         emit LoanPayment(_borrower,_amount);
     } 
-
-    function payOffCollateralLoan(address _borrower, uint256 _amount) external{
-        uint256 _collateral = collateralContract.getCollateralBalance(_borrower);
-        uint256 _adjCollateral = _collateral * collateralDiscount/100000;
-        LineOfCredit storage _l  = linesOfCredit[_borrower];
-        require(_l.amountTaken > 0);
-        uint256 _currentValue =  _l.amountTaken + _l.amountTaken* _l.interestRate * 100000 * (block.timestamp - _l.calcDate)/YEAR/100000/100000; 
-        if(_currentValue <= _adjCollateral){
-            require(msg.sender == _borrower || msg.sender == admin, "must be authorized");
-        }
-        else{
-            if(_currentValue >= _collateral){
-                _currentValue = _collateral;
-            }
-        }
-        uint256 _interest = _currentValue - _l.amountTaken;
-        uint256 _fee;
-        uint256 _paymentAmount;
-        georgies.mint(treasury,_interest);
-        if(_amount > _currentValue + _currentValue * fee/100000){
-            _fee = _currentValue  * fee/100000;
-            _paymentAmount = _currentValue;
-        }
-        else{
-            _fee = _amount * fee/100000;
-            _paymentAmount = _amount -_fee;
-        }
-        require(georgies.transferFrom(msg.sender,feeContract,_fee), "transfer failed");
-        georgies.burn(msg.sender,_paymentAmount);
-        collateralContract.sendCollateral(msg.sender,_borrower,_paymentAmount);
-        _l.amountTaken = _currentValue - _paymentAmount;
-        _l.calcDate = block.timestamp;
-        emit LoanPayment(_borrower,_amount);
-    }
 
     /**
      * @dev function for admin to set a new line of credit for a borrower
@@ -201,6 +164,7 @@ contract LoanOriginator {
      */
     function updateSystemVariables(address _admin, address _collateralContract, address _feeContract, address _treasury, uint256 _fee, uint256 _collateralDiscount) external{
         require(msg.sender == admin);
+        require(_treasury != address(0));
         proposalTime = block.timestamp;
         proposedAdmin = _admin;
         proposedCollateralContract = _collateralContract;
@@ -219,21 +183,28 @@ contract LoanOriginator {
     function withdrawLoan(address _to, uint256 _amount) external{
         require(msg.sender == admin || msg.sender == _to);
         LineOfCredit storage _l  = linesOfCredit[_to];
-        require(block.timestamp > _l.startDate + 1 days);
+        require(block.timestamp >= _l.startDate + 1 days);
         uint256 _interest;
         if(_l.amountTaken > 0){
             uint256 _newValue = _l.amountTaken + _l.amountTaken* _l.interestRate * 100000 * (block.timestamp - _l.calcDate)/YEAR/100000/100000;
             _interest = _newValue - _l.amountTaken;
-            georgies.mint(treasury,_interest);
         }
         _l.amountTaken = _amount + _l.amountTaken + _interest;
         require(_l.amountTaken <= _l.amount);
+        if(_l.isCollateral){
+            uint256 _collateral = collateralContract.getCollateralBalance(_to);
+            _collateral = _collateral * collateralDiscount;
+            require(_l.amountTaken <= _collateral);
+        }
         _l.calcDate = block.timestamp;
         uint256 _fee = _amount * fee/100000;
         emit LoanTaken(_to,_amount);
         georgies.mint(_to,_amount - _fee);
         georgies.mint(feeContract,_fee);
-    }   
+        if(_interest > 0){
+            georgies.mint(treasury,_interest);
+        }
+    }
 
     //getters
     /**
