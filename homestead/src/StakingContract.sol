@@ -38,7 +38,7 @@ contract StakingContract is Token{
 
     function  unstake(uint256 _amount) external{
         require(balance[msg.sender] >= _amount, "must have tokens");
-        uint256 _pctOwnership = balance[msg.sender] * 1 ether / supply;
+        uint256 _pctOwnership = _amount * 1 ether / supply;
         _burn(msg.sender,_amount);
         uint256 _gOut = _pctOwnership * georgies.balanceOf(address(this)) / 1 ether;
         if(_gOut > 0){
