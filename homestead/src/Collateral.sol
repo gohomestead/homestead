@@ -64,9 +64,9 @@ contract Collateral {
         if(_amount > collateralBalance[_from]){
             _amount = collateralBalance[_from];
         }
-        collateralToken.transfer(_to,_amount);
         collateralBalance[_from] = collateralBalance[_from]  - _amount;
         totalCollateral -= _amount;
+        require(collateralToken.transfer(_to,_amount));
         emit CollateralWithdrawn(_from,_amount);
     }   
 

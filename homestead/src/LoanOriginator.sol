@@ -102,6 +102,7 @@ contract LoanOriginator {
         uint256 _fee;
         uint256 _paymentAmount;
         bool _isDefault;
+        //if it's a collateral backed loan, anyone can pay it back if it's undercollateralized (interest grows over the collateral)
         if(_l.isCollateral){
                 uint256 _collateral = collateralContract.getCollateralBalance(_borrower);
                 uint256 _adjCollateral = _collateral * collateralDiscount/100000;
@@ -115,7 +116,7 @@ contract LoanOriginator {
                     }
                 }
         }
-        else{
+        else{//the admin pays it back in case of default
             require(msg.sender == _borrower || msg.sender == admin, "must be authorized");
         }
         if(_amount > _currentValue + _currentValue * fee/100000){
@@ -191,6 +192,7 @@ contract LoanOriginator {
         }
         _l.amountTaken = _amount + _l.amountTaken + _interest;
         require(_l.amountTaken <= _l.amount);
+        //if it's a collateral loan, we make sure you have the collateral locked
         if(_l.isCollateral){
             uint256 _collateral = collateralContract.getCollateralBalance(_to);
             _collateral = _collateral * collateralDiscount;

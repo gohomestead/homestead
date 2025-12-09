@@ -134,7 +134,7 @@ contract Georgies is Token{
      * @param _amount amount of token to send
      */
     function _move(address _src, address _dst, uint256 _amount) internal override{
-        require(!blacklisted[_src] && !blacklisted[_dst]);
+        require(!blacklisted[_src] && !blacklisted[_dst]);//checks for blacklist at the lowest level
         balance[_src] = balance[_src] - _amount;//will overflow if too big
         balance[_dst] = balance[_dst] + _amount;
         emit Transfer(_src, _dst, _amount);

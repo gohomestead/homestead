@@ -40,6 +40,7 @@ contract StakingContract is Token{
         require(balance[msg.sender] >= _amount, "must have tokens");
         uint256 _pctOwnership = _amount * 1 ether / supply;
         _burn(msg.sender,_amount);
+        //as rewards get sent to the contract, the ratio of ownership tokens to rewards grows (always startss at 1 to 1)
         uint256 _gOut = _pctOwnership * georgies.balanceOf(address(this)) / 1 ether;
         if(_gOut > 0){
             georgies.transfer(msg.sender, _gOut);
