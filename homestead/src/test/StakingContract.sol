@@ -7,6 +7,7 @@ import "./Token.sol";
 /**
  @title StaingContract
  @dev allows you to stake your georgies so you get Henries as a reward
+    This is a test contract.  Use an AMM pool for Henries/Georgies as the official address to drop to
  */
 contract StakingContract is Token{
 
@@ -19,12 +20,6 @@ contract StakingContract is Token{
     event Unstake(address _staker, uint256 _amount);
 
     /*Functions*/
-    /**
-     * @dev starts the Staking Contract
-     * @param _henries the address of the henries token
-     * @param _georgies address of georgies token
-     * must also initialize the treasury contract in the system to fully start
-     */
     constructor(address _georgies, address _henries, string memory _name, string memory _symbol) Token(_name,_symbol){
         henries = IERC20(_henries);
         georgies = IERC20(_georgies);

@@ -80,6 +80,13 @@ contract LoanOriginator {
         emit SystemVariablesUpdated(admin,address(collateralContract), feeContract, treasury, fee, collateralDiscount);
     }
 
+    /**
+     * @dev function to initialize the contract
+     * @param _collateralContract address of the collateral contract
+     * @param _treasury address of the treasury (gets interest)
+     * @param _fee fee in the system (100,000 = 100%)
+     * @param _collateralDiscount discount multiple on collateral (100,000 = 100%, so set at 90,000 for 90%)
+     */
     function init(address _collateralContract, address _treasury, uint256 _fee, uint256 _collateralDiscount) external{
         require(treasury == address(0));
         require(_treasury != address(0));

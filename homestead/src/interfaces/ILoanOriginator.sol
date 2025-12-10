@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 /**
- @title IOracle
- @dev oracle interface for the CFC contract
+ @title ILoanOriginator
+ @dev interface for the loan originator
 **/
 interface ILoanOriginator {
         function payLoan(address _borrower, uint256 _amount) external;

@@ -46,6 +46,7 @@ contract Georgies is Token{
         require(msg.sender == admin);
         loanContract = _loanContract;
     }
+    
     /**
      * @dev function for the admin to blacklist update an array
      * @param _addresses addresses of users to blacklist (or unblacklist)
