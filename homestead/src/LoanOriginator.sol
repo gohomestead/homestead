@@ -10,6 +10,7 @@ import "./interfaces/ICollateral.sol";
 // \    Y    (  <_> )  Y Y  \  ___/ \___ \  |  | \  ___/ / __ \_/ /_/ | 
 //  \___|_  / \____/|__|_|  /\___  >____  > |__|  \___  >____  /\____ | 
 //        \/              \/     \/     \/            \/     \/      \/ 
+
 /**
  @title LoanOriginator
  @dev the incentive token for the homestead protocol

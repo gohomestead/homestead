@@ -8,7 +8,7 @@ import { Georgies } from "../src/Georgies.sol";
 import { LoanOriginator } from "../src/LoanOriginator.sol";
 import { Treasury } from "../src/Treasury.sol";
 import { TestToken } from "../src/test/TestToken.sol";
-import { StakingContract } from "../src/StakingContract.sol";
+import { StakingContract } from "../src/test/StakingContract.sol";
 import { Collateral } from "../src/Collateral.sol";
 
 contract E2ETest is Test {

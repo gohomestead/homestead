@@ -4,7 +4,26 @@ pragma solidity 0.8.25;
 import "./interfaces/IERC20.sol";
 import "./interfaces/ILoanOriginator.sol";
 
-contract Collateral {
+//        _..._       .-'''-.                                                                                     
+//     .-'_..._''.   '   _    \  .---..---.                                                        .---.          
+//   .' .'      '.\/   /` '.   \ |   ||   |                        __.....__                       |   |          
+//  / .'          .   |     \  ' |   ||   |                    .-''         '.                     |   |          
+// . '            |   '      |  '|   ||   |              .|   /     .-''"'-.  `. .-,.--.           |   |          
+// | |            \    \     / / |   ||   |    __      .' |_ /     /________\   \|  .-. |    __    |   |          
+// | |             `.   ` ..' /  |   ||   | .:--.'.  .'     ||                  || |  | | .:--.'.  |   |          
+// . '                '-...-'`   |   ||   |/ |   \ |'--.  .-'\    .-------------'| |  | |/ |   \ | |   |          
+//  \ '.          .              |   ||   |`" __ | |   |  |   \    '-.____...---.| |  '- `" __ | | |   |          
+//   '. `._____.-'/              |   ||   | .'.''| |   |  |    `.             .' | |      .'.''| | |   |          
+//     `-.______ /               '---''---'/ /   | |_  |  '.'    `''-...... -'   | |     / /   | |_'---'          
+//              `                          \ \._,\ '/  |   /                     |_|     \ \._,\ '/               
+//                                          `--'  `"   `'-'                               `--'  `"                
+
+/**
+ @title Collateral
+ @dev contract to hold collateral for collateral backed loans
+ //system assumes stable currency and becomes uncollateralized when interest grows greater than locked amount - buffer
+ */
+ contract Collateral {
     /*Storage*/
     IERC20 public collateralToken;
     ILoanOriginator public loanContract;

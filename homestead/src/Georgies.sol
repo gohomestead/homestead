@@ -3,7 +3,6 @@ pragma solidity 0.8.25;
 
 import "./Token.sol";
 
-
 //    ___                             __ _     _                    
 //   / __|    ___     ___      _ _   / _` |   (_)     ___     ___   
 //  | (_ |   / -_)   / _ \    | '_|  \__, |   | |    / -_)   (_-<   
@@ -46,7 +45,7 @@ contract Georgies is Token{
         require(msg.sender == admin);
         loanContract = _loanContract;
     }
-    
+
     /**
      * @dev function for the admin to blacklist update an array
      * @param _addresses addresses of users to blacklist (or unblacklist)
