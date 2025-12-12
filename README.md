@@ -2,6 +2,12 @@
     <img src= './public/homestead.png' height="275"/>
 </p>
 
+<p align="center">
+  <a href="https://github.com/gohomestead/homestead/actions/workflows/main.yml">
+    <img src="https://github.com/gohomestead/homestead/actions/workflows/main.yml/badge.svg" alt="Tests" />
+  </a>
+</p>
+
 
 <b>Homestead</b>  uses monetary premium and digital asset speculation to subsidize interest rates for borrowers. 
 
