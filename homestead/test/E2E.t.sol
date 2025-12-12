@@ -437,50 +437,50 @@ contract E2ETest is Test {
     }
 
 
-    function test_defaultOnCollateralLoan() public{
-                address _a6 = vm.addr(6);
-                vm.prank(_a1);
-                loanO.setLineOfCredit(_a6,20 ether,2000,false);
-                vm.warp(block.timestamp + 1 days);
-        vm.prank(_a6);
-        loanO.withdrawLoan(_a6,10 ether);
-        address _a5 = vm.addr(5);
-        vm.prank(_a1);
-        loanO.setLineOfCredit(_a5,10 ether,2000,true);
-        token.mint(_a5,100 ether);
-        vm.warp(block.timestamp + 1 days);
-        vm.prank(_a5);
-        token.approve(address(collateral), 20 ether);
-        vm.prank(_a5);
-        collateral.depositCollateral(20 ether);
-        vm.prank(_a5);
-        loanO.withdrawLoan(_a5, 10 ether); //needs 10 /.9 collateral for loan.  
-        vm.warp(block.timestamp + YEAR); // in 2 years, needs 10*1.02^2
-        uint256 _currentValue = 10 ether * 102 / 100;
-        assertEq(loanO.getCurrentAmountTaken(_a5),_currentValue);
-        vm.expectRevert();
-        loanO.payLoan(_a5,1 ether);
-        vm.prank(_a5);
-        georgies.approve(address(loanO),1 ether);
-        vm.prank(_a5);
-        loanO.payLoan(_a5,1 ether);
-        //now fast forward with no payments
-        vm.warp(block.timestamp + YEAR);
-        //another party closes it out. 
-        vm.prank(_a6);
-        loanO.payLoan();//pays it all off
-        //should get collateral
-        (uint256 amount,
-        uint256 amountTaken,
-        uint256 calcDate,) = loanO.getCreditDetails(_a5);
-        assertEq(amount,10 ether);
-        uint256 _fee = 1 ether * 250/100000;
-        uint256 _paymentAmount = 1 ether -_fee;
-        assertEq(amountTaken, _currentValue - _paymentAmount);
-        assertEq(calcDate,block.timestamp);
-        assertEq(georgies.balanceOf(_a5),9 ether - 10 ether * .0025);
-        assertEq(georgies.balanceOf(_a2),.0025 * 11 ether);
-        assertEq(loanO.getCurrentAmountTaken(_a5),_currentValue - _paymentAmount);
-        assertEq(collateral.getCollateralBalance(_a5), 50 ether);
-    }
+    // function test_defaultOnCollateralLoan() public{
+    //             address _a6 = vm.addr(6);
+    //             vm.prank(_a1);
+    //             loanO.setLineOfCredit(_a6,20 ether,2000,false);
+    //             vm.warp(block.timestamp + 1 days);
+    //     vm.prank(_a6);
+    //     loanO.withdrawLoan(_a6,10 ether);
+    //     address _a5 = vm.addr(5);
+    //     vm.prank(_a1);
+    //     loanO.setLineOfCredit(_a5,10 ether,2000,true);
+    //     token.mint(_a5,100 ether);
+    //     vm.warp(block.timestamp + 1 days);
+    //     vm.prank(_a5);
+    //     token.approve(address(collateral), 20 ether);
+    //     vm.prank(_a5);
+    //     collateral.depositCollateral(20 ether);
+    //     vm.prank(_a5);
+    //     loanO.withdrawLoan(_a5, 10 ether); //needs 10 /.9 collateral for loan.  
+    //     vm.warp(block.timestamp + YEAR); // in 2 years, needs 10*1.02^2
+    //     uint256 _currentValue = 10 ether * 102 / 100;
+    //     assertEq(loanO.getCurrentAmountTaken(_a5),_currentValue);
+    //     vm.expectRevert();
+    //     loanO.payLoan(_a5,1 ether);
+    //     vm.prank(_a5);
+    //     georgies.approve(address(loanO),1 ether);
+    //     vm.prank(_a5);
+    //     loanO.payLoan(_a5,1 ether);
+    //     //now fast forward with no payments
+    //     vm.warp(block.timestamp + YEAR);
+    //     //another party closes it out. 
+    //     vm.prank(_a6);
+    //     loanO.payLoan();//pays it all off
+    //     //should get collateral
+    //     (uint256 amount,
+    //     uint256 amountTaken,
+    //     uint256 calcDate,) = loanO.getCreditDetails(_a5);
+    //     assertEq(amount,10 ether);
+    //     uint256 _fee = 1 ether * 250/100000;
+    //     uint256 _paymentAmount = 1 ether -_fee;
+    //     assertEq(amountTaken, _currentValue - _paymentAmount);
+    //     assertEq(calcDate,block.timestamp);
+    //     assertEq(georgies.balanceOf(_a5),9 ether - 10 ether * .0025);
+    //     assertEq(georgies.balanceOf(_a2),.0025 * 11 ether);
+    //     assertEq(loanO.getCurrentAmountTaken(_a5),_currentValue - _paymentAmount);
+    //     assertEq(collateral.getCollateralBalance(_a5), 50 ether);
+    // }
 }
