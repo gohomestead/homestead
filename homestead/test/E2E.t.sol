@@ -435,8 +435,6 @@ contract E2ETest is Test {
         assertEq(georgies.balanceOf(address(feeContract)),ibal);
         assertEq(henries.balanceOf(address(feeContract)),1 ether);
     }
-
-
     // function test_defaultOnCollateralLoan() public{
     //             address _a6 = vm.addr(6);
     //             vm.prank(_a1);
