@@ -14,16 +14,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
           version: nightly
 
+      - name: Install dependencies
+        run: |
+          cd homestead
+          forge install --no-commit
+        continue-on-error: true
+
       - name: Run Forge tests
         run: |
           cd homestead
           forge test -vvv
-        id: test
