@@ -2,6 +2,7 @@
 pragma solidity 0.8.25;
 
 import "./interfaces/IERC20.sol";
+import "./interfaces/ICollateral.sol";
 import "./interfaces/ILoanOriginator.sol";
 
 //        _..._       .-'''-.                                                                                     
@@ -23,9 +24,9 @@ import "./interfaces/ILoanOriginator.sol";
  @dev contract to hold collateral for collateral backed loans
  //system assumes stable currency and becomes uncollateralized when interest grows greater than locked amount - buffer
  */
- contract Collateral {
+ contract Collateral is ICollateral{
     /*Storage*/
-    IERC20 public collateralToken;
+    IERC20 public immutable collateralToken;
     ILoanOriginator public loanContract;
     
     address public admin;//admin can change loan contract
@@ -87,7 +88,7 @@ import "./interfaces/ILoanOriginator.sol";
         require((collateralBalance[msg.sender] - _amount) > _amountTaken);
         collateralBalance[msg.sender] = collateralBalance[msg.sender]  - _amount;
         totalCollateral -= _amount;
-        collateralToken.transfer(msg.sender,_amount);
+        require(collateralToken.transfer(msg.sender,_amount));
         emit CollateralWithdrawn(msg.sender,_amount);
     }
 

@@ -25,7 +25,7 @@ import "./interfaces/ILoanOriginator.sol";
 contract Treasury{
 
     /*Storage*/
-    IERC20 public georgies;
+    IERC20 public immutable georgies;
 
     address public admin;//admin can send funds from this contract
     uint256 public totalOut;//total amount given out from the contract
@@ -64,7 +64,7 @@ contract Treasury{
     function doMonetaryPolicy(address _to, uint256 _amount) external{
         require(msg.sender == admin);
         require(_amount <= georgies.balanceOf(address(this)));
-        georgies.transfer(_to,_amount);
+        require(georgies.transfer(_to,_amount));
         fundsGivenByAddress[_to] = fundsGivenByAddress[_to] += _amount;
         totalOut += _amount;
         emit FundsDistributed(_to, _amount);

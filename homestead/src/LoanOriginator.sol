@@ -3,6 +3,7 @@ pragma solidity 0.8.25;
 
 import "./interfaces/IGeorgies.sol";
 import "./interfaces/ICollateral.sol";
+import "./interfaces/ILoanOriginator.sol";
 
 //   ___ ___                                 __                     .___
 //  /   |   \  ____   _____   ____   _______/  |_  ____ _____     __| _/
@@ -15,7 +16,7 @@ import "./interfaces/ICollateral.sol";
  @title LoanOriginator
  @dev the incentive token for the homestead protocol
 **/
-contract LoanOriginator {
+contract LoanOriginator is ILoanOriginator{
     //storage
     struct LineOfCredit {
         bool isCollateral;
@@ -27,7 +28,7 @@ contract LoanOriginator {
     }
 
     ICollateral public collateralContract;
-    IGeorgies public  georgies;//address of base georgies token
+    IGeorgies public immutable georgies;//address of base georgies token
 
     address public admin;//admin of the system, can change feeContract, treasury, repay loans (default), approve loans, and change fee
     address public feeContract;//address that accumulates system fees
@@ -104,12 +105,13 @@ contract LoanOriginator {
      */
     function payLoan(address _borrower, uint256 _amount) external{
         LineOfCredit storage _l  = linesOfCredit[_borrower];
+        require(_l.calcDate < block.timestamp);
         require(_l.amountTaken > 0);
         uint256 _currentValue =  _l.amountTaken + _l.amountTaken* _l.interestRate * 100000 * (block.timestamp - _l.calcDate)/YEAR/100000/100000; 
         uint256 _interest = _currentValue - _l.amountTaken;
         uint256 _fee;
         uint256 _paymentAmount;
-        bool _isDefault;
+        bool _isDefault = false;
         //if it's a collateral backed loan, anyone can pay it back if it's undercollateralized (interest grows over the collateral)
         if(_l.isCollateral){
                 uint256 _collateral = collateralContract.getCollateralBalance(_borrower);
@@ -193,7 +195,8 @@ contract LoanOriginator {
         require(msg.sender == admin || msg.sender == _to);
         LineOfCredit storage _l  = linesOfCredit[_to];
         require(block.timestamp >= _l.startDate + 1 days);
-        uint256 _interest;
+        require(block.timestamp > _l.calcDate);//reentrancy protection
+        uint256 _interest = 0;
         if(_l.amountTaken > 0){
             uint256 _newValue = _l.amountTaken + _l.amountTaken* _l.interestRate * 100000 * (block.timestamp - _l.calcDate)/YEAR/100000/100000;
             _interest = _newValue - _l.amountTaken;

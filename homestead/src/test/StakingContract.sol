@@ -12,8 +12,8 @@ import "../Token.sol";
 contract StakingContract is Token{
 
     /*Storage*/
-    IERC20 public georgies; 
-    IERC20 public henries;
+    IERC20 public immutable georgies; 
+    IERC20 public immutable henries;
 
     /*Events*/
     event Stake(address _stake, uint256 _amount);
@@ -38,11 +38,11 @@ contract StakingContract is Token{
         //as rewards get sent to the contract, the ratio of ownership tokens to rewards grows (always startss at 1 to 1)
         uint256 _gOut = _pctOwnership * georgies.balanceOf(address(this)) / 1 ether;
         if(_gOut > 0){
-            georgies.transfer(msg.sender, _gOut);
+            require(georgies.transfer(msg.sender, _gOut));
         }
         uint256 _hOut = _pctOwnership * henries.balanceOf(address(this)) / 1 ether;
         if(_hOut > 0){
-            henries.transfer(msg.sender, _hOut);
+            require(henries.transfer(msg.sender, _hOut));
         }
         emit Unstake(msg.sender, _amount);
     }

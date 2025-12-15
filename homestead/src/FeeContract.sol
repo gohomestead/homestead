@@ -18,11 +18,11 @@ import "./Henries.sol";
  */
 contract FeeContract {
     //storage
-    Henries public henries;//Henries Address
-    IERC20 public georgies;//Georgies address
+    Henries public immutable henries;//Henries Address
+    IERC20 public immutable georgies;//Georgies address
 
     address public topBidder;//current top bidder in the round
-    uint256 public auctionFrequency;//auction frequency in seconds
+    uint256 public immutable auctionFrequency;//auction frequency in seconds
     uint256 public currentTopBid;//current top bid (in georgies)
     uint256 public endDate;//end date of current auction round
 

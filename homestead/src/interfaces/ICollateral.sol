@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: None
-pragma solidity ^0.8.0;
+pragma solidity 0.8.25;
 
 /**
  * @dev Interface of the Collateral contract
